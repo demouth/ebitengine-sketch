@@ -3,7 +3,6 @@ package main
 import "math"
 
 const (
-	gravity  = 0.98
 	friction = 0.98
 	spring   = 0.4
 	bounce   = 0.3
@@ -26,7 +25,6 @@ func (u *Calc) move(fruits []*Fruit) {
 		f := fruits[i]
 		f.VX *= friction
 		f.VY *= friction
-		f.VY += gravity
 		f.X += f.VX
 		f.Y += f.VY
 	}
