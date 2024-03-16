@@ -67,12 +67,7 @@ func (d *Draw) World(screen *ebiten.Image, world World) {
 
 func (d *Draw) Fruit(screen *ebiten.Image, world World, f *Fruit) {
 	var img *ebiten.Image
-	switch {
-	case f.Type == APPLE:
-		img = appleImage
-	default:
-		img = appleImage
-	}
+	img = appleImage
 
 	w, h := img.Bounds().Dx(), img.Bounds().Dy()
 	d.op.Filter = ebiten.FilterLinear
