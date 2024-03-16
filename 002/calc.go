@@ -72,8 +72,9 @@ func (u *Calc) screenWrap(fruits []*Fruit) {
 			f.X = u.World.Width - f.Radius
 			f.VX *= -bounce
 		}
-		if f.Y < 0 {
-			// no screen wrap
+		if f.Y-f.Radius < 0 {
+			f.Y = f.Radius
+			f.VY *= -bounce
 		} else if u.World.Height < f.Y+f.Radius {
 			f.Y = u.World.Height - f.Radius
 			f.VY *= -bounce
