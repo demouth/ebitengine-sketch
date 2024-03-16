@@ -14,93 +14,33 @@ const (
 )
 
 type Game struct {
-	touchIDs []ebiten.TouchID
 }
 
 var (
-	fruits = []*Fruit{}
-	world  = World{X: 90, Y: 100, Width: 300, Height: 540}
+	fruits = []*Fruit{
+		NewApple(100, 100),
+		NewApple(130, 120),
+		NewApple(150, 150),
+	}
+	world = World{X: 10, Y: 10, Width: screenWidth - 20, Height: screenHeight - 20}
 
-	dropper = NewDropper(world)
-	calc    = &Calc{World: world}
-	draw    = &Draw{}
+	calc = &Calc{World: world}
+	draw = &Draw{}
 
 	isKeyPressed = false
 )
 
-func (g *Game) leftTouched() bool {
-	for _, id := range g.touchIDs {
-		x, y := ebiten.TouchPosition(id)
-		if y >= screenHeight/2 {
-			return false
-		}
-		if x < screenWidth/2 {
-			return true
-		}
-	}
-	return false
-}
-
-func (g *Game) rightTouched() bool {
-	for _, id := range g.touchIDs {
-		x, y := ebiten.TouchPosition(id)
-		if y >= screenHeight/2 {
-			return false
-		}
-		if x >= screenWidth/2 {
-			return true
-		}
-	}
-	return false
-}
-
-func (g *Game) bottomTouched() bool {
-	for _, id := range g.touchIDs {
-		_, y := ebiten.TouchPosition(id)
-		if y >= screenHeight/2 {
-			return true
-		}
-	}
-	return false
-}
-
 func (g *Game) Update() error {
 	fruits = calc.Fruits(fruits)
-
-	g.touchIDs = ebiten.AppendTouchIDs(g.touchIDs[:0])
-
-	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) || g.leftTouched() {
-		dropper.MoveLeft()
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) || g.rightTouched() {
-		dropper.MoveRight()
-	}
-	if ebiten.IsKeyPressed(ebiten.KeySpace) || g.bottomTouched() {
-		isKeyPressed = true
-	} else if isKeyPressed {
-		isKeyPressed = false
-		if next := dropper.Drop(); next != nil {
-			fruits = append(fruits, next)
-		}
-	}
-
-	dropper.Tick()
 
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	draw.World(screen, world)
-	if next := dropper.Next(); next != nil {
-		draw.Fruit(screen, world, next)
-	}
 	draw.Fruits(screen, world, fruits)
 	msg := fmt.Sprintf(
-		"PC:\n  <- key: move left\n  -> key: move right\n  spacebar: drop fruit\n"+
-			"Touch Devices:\n  left: move left\n  right: move right\n  bottom: drop fruit\n"+
-			"HI-SCORE: %d\nSCORE: %d\nFPS: %0.2f",
-		calc.HiScore,
-		calc.Score,
+		"FPS: %0.2f",
 		ebiten.ActualFPS(),
 	)
 	ebitenutil.DebugPrint(screen, msg)
@@ -112,7 +52,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func main() {
 	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("suika-game-go")
+	ebiten.SetWindowTitle("002")
 	if err := ebiten.RunGame(&Game{}); err != nil {
 		log.Fatal(err)
 	}

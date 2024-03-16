@@ -2,11 +2,6 @@ package main
 
 const (
 	APPLE = iota
-	GRAPE
-	ORANGE
-	PINEAPPLE
-	MELON
-	WATERMELON
 )
 
 type Fruit struct {
@@ -25,48 +20,5 @@ func NewApple(x float64, y float64) *Fruit {
 		Y:      y,
 		Radius: 20,
 		Type:   APPLE,
-	}
-}
-
-func NewOrange(x float64, y float64) *Fruit {
-	return &Fruit{
-		X:      x,
-		Y:      y,
-		Radius: 35,
-		Type:   ORANGE,
-	}
-}
-
-func NewGrape(x float64, y float64) *Fruit {
-	return &Fruit{
-		X:      x,
-		Y:      y,
-		Radius: 50,
-		Type:   GRAPE,
-	}
-}
-func NewPineapple(x float64, y float64) *Fruit {
-	return &Fruit{
-		X:      x,
-		Y:      y,
-		Radius: 65,
-		Type:   PINEAPPLE,
-	}
-}
-func NewMelon(x float64, y float64) *Fruit {
-	return &Fruit{
-		X:      x,
-		Y:      y,
-		Radius: 80,
-		Type:   MELON,
-	}
-}
-
-func NewWatermelon(x float64, y float64) *Fruit {
-	return &Fruit{
-		X:      x,
-		Y:      y,
-		Radius: 95,
-		Type:   WATERMELON,
 	}
 }

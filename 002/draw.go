@@ -40,11 +40,6 @@ type Draw struct {
 
 func init() {
 	appleImage = loadImage(apple_png)
-	orangeImage = loadImage(orange_png)
-	grapeImage = loadImage(grape_png)
-	pineappleImage = loadImage(pineapple_png)
-	melonImage = loadImage(melon_png)
-	watermelonImage = loadImage(watermelon_png)
 }
 
 func loadImage(b []byte) *ebiten.Image {
@@ -75,16 +70,6 @@ func (d *Draw) Fruit(screen *ebiten.Image, world World, f *Fruit) {
 	switch {
 	case f.Type == APPLE:
 		img = appleImage
-	case f.Type == ORANGE:
-		img = orangeImage
-	case f.Type == GRAPE:
-		img = grapeImage
-	case f.Type == PINEAPPLE:
-		img = pineappleImage
-	case f.Type == MELON:
-		img = melonImage
-	case f.Type == WATERMELON:
-		img = watermelonImage
 	default:
 		img = appleImage
 	}
