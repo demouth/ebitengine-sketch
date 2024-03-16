@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -17,12 +18,10 @@ type Game struct {
 }
 
 var (
-	fruits = []*Fruit{
-		NewApple(100, 100),
-		NewApple(130, 120),
-		NewApple(150, 150),
-	}
-	world = World{X: 10, Y: 10, Width: screenWidth - 20, Height: screenHeight - 20}
+	mainCharacter = NewApple(200, 200)
+
+	fruits = []*Fruit{mainCharacter}
+	world  = World{X: 10, Y: 10, Width: screenWidth - 20, Height: screenHeight - 20}
 
 	calc = &Calc{World: world}
 	draw = &Draw{}
@@ -30,8 +29,36 @@ var (
 	isKeyPressed = false
 )
 
+func init() {
+	for _ = range 30 {
+		fruits = append(
+			fruits,
+			NewApple(
+				rand.Float64()*screenWidth,
+				rand.Float64()*screenHeight,
+			),
+		)
+	}
+}
+
 func (g *Game) Update() error {
 	fruits = calc.Fruits(fruits)
+
+	ac := 0.1
+	if ebiten.IsKeyPressed(ebiten.KeySpace) {
+		ac = 0.5
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		mainCharacter.VX -= ac
+	} else if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+		mainCharacter.VX += ac
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		mainCharacter.VY -= ac
+	} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		mainCharacter.VY += ac
+	}
 
 	return nil
 }
