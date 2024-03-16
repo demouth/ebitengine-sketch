@@ -1,0 +1,1 @@
+copy from https://www.reddit.com/r/StableDiffusion/comments/yj1kbi/ive_trained_a_new_model_to_output_pixel_art/?rdt=49734

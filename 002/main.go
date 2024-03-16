@@ -11,26 +11,33 @@ import (
 
 const (
 	screenWidth  = 480
-	screenHeight = 640
+	screenHeight = 480
 )
 
 type Game struct {
 }
 
+type Drawer interface {
+	World(screen *ebiten.Image, world World)
+	Fruit(screen *ebiten.Image, world World, f *Fruit)
+	Fruits(screen *ebiten.Image, world World, fruits []*Fruit)
+}
+
 var (
-	mainCharacter = NewApple(200, 200)
+	mainCharacter = NewApple(screenWidth/2, screenHeight/2)
 
 	fruits = []*Fruit{mainCharacter}
 	world  = World{X: 10, Y: 10, Width: screenWidth - 20, Height: screenHeight - 20}
 
 	calc = &Calc{World: world}
-	draw = &Draw{}
+
+	drawer Drawer
 
 	isKeyPressed = false
 )
 
 func init() {
-	for _ = range 30 {
+	for _ = range 40 {
 		fruits = append(
 			fruits,
 			NewApple(
@@ -39,6 +46,8 @@ func init() {
 			),
 		)
 	}
+
+	drawer = &SpriteDrawer{}
 }
 
 func (g *Game) Update() error {
@@ -47,6 +56,11 @@ func (g *Game) Update() error {
 	ac := 0.1
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
 		ac = 0.5
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyA) {
+		drawer = &SpriteDrawer{}
+	} else if ebiten.IsKeyPressed(ebiten.KeyS) {
+		drawer = &Draw{}
 	}
 
 	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
@@ -64,10 +78,14 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	draw.World(screen, world)
-	draw.Fruits(screen, world, fruits)
+	drawer.World(screen, world)
+	drawer.Fruits(screen, world, fruits)
 	msg := fmt.Sprintf(
-		"FPS: %0.2f",
+		"Arrow keys: move character\n"+
+			"Space keys: move fast\n"+
+			"A key: Draw a character\n"+
+			"S key: Draw an apple\n"+
+			"FPS: %0.2f",
 		ebiten.ActualFPS(),
 	)
 	ebitenutil.DebugPrint(screen, msg)
