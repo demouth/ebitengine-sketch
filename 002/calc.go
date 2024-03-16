@@ -27,6 +27,26 @@ func (u *Calc) move(fruits []*Fruit) {
 		f.VY *= friction
 		f.X += f.VX
 		f.Y += f.VY
+
+		avx := math.Abs(f.VX)
+		avy := math.Abs(f.VY)
+		if avx < 0.1 && avy < 0.1 {
+			f.Direction = BOTTOM
+			continue
+		}
+		if avx < avy {
+			if f.VY < 0 {
+				f.Direction = TOP
+			} else {
+				f.Direction = BOTTOM
+			}
+		} else {
+			if f.VX < 0 {
+				f.Direction = LEFT
+			} else {
+				f.Direction = RIGHT
+			}
+		}
 	}
 }
 

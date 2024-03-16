@@ -1,12 +1,20 @@
 package main
 
+const (
+	BOTTOM = iota
+	RIGHT
+	TOP
+	LEFT
+)
+
 type Fruit struct {
 	X      float64
 	Y      float64
 	VX     float64
 	VY     float64
 	Radius float64
-	Remove bool
+
+	Direction uint8
 }
 
 func NewApple(x float64, y float64) *Fruit {
@@ -14,5 +22,7 @@ func NewApple(x float64, y float64) *Fruit {
 		X:      x,
 		Y:      y,
 		Radius: 20,
+
+		Direction: BOTTOM,
 	}
 }
