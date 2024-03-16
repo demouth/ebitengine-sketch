@@ -47,6 +47,8 @@ func (u *Calc) move(fruits []*Fruit) {
 				f.Direction = RIGHT
 			}
 		}
+
+		f.TotalMovement += avx + avy
 	}
 }
 

@@ -14,7 +14,8 @@ type Fruit struct {
 	VY     float64
 	Radius float64
 
-	Direction uint8
+	Direction     uint8
+	TotalMovement float64
 }
 
 func NewApple(x float64, y float64) *Fruit {
