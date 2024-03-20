@@ -15,6 +15,7 @@ const (
 )
 
 type Game struct {
+	touchIDs []ebiten.TouchID
 }
 
 type Drawer interface {
@@ -51,9 +52,21 @@ func init() {
 }
 
 func (g *Game) Update() error {
+	// touch devices
+	{
+		g.touchIDs = ebiten.AppendTouchIDs(g.touchIDs[:0])
+		hh := float64(screenHeight) / 2
+		hw := float64(screenWidth) / 2
+		for _, id := range g.touchIDs {
+			x, y := ebiten.TouchPosition(id)
+			mainCharacter.VX += (float64(x) - hw) / hw * 1
+			mainCharacter.VY += (float64(y) - hh) / hh * 1
+		}
+	}
+
 	fruits = calc.Fruits(fruits)
 
-	ac := 0.1
+	ac := 0.2
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
 		ac = 0.5
 	}
