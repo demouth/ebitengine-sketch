@@ -58,9 +58,17 @@ func (g *Game) Update() error {
 		hh := float64(screenHeight) / 2
 		hw := float64(screenWidth) / 2
 		for _, id := range g.touchIDs {
+			if id > 0 {
+				break
+			}
 			x, y := ebiten.TouchPosition(id)
 			mainCharacter.VX += (float64(x) - hw) / hw * 1
 			mainCharacter.VY += (float64(y) - hh) / hh * 1
+		}
+		if len(g.touchIDs) > 1 {
+			drawer = &Draw{}
+		} else {
+			drawer = &SpriteDrawer{}
 		}
 	}
 
