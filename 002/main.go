@@ -7,6 +7,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 const (
@@ -70,6 +71,15 @@ func (g *Game) Update() error {
 		} else {
 			drawer = &SpriteDrawer{}
 		}
+	}
+	// mouse
+
+	if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 0 {
+		hh := float64(screenHeight) / 2
+		hw := float64(screenWidth) / 2
+		x, y := ebiten.CursorPosition()
+		mainCharacter.VX += (float64(x) - hw) / hw * 1
+		mainCharacter.VY += (float64(y) - hh) / hh * 1
 	}
 
 	fruits = calc.Fruits(fruits)
