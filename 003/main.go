@@ -108,6 +108,7 @@ func (t *TextField) Draw(screen *ebiten.Image) {
 
 type Game struct {
 	textField *TextField
+	touchIDs  []ebiten.TouchID
 }
 
 func (g *Game) Update() error {
@@ -118,6 +119,14 @@ func (g *Game) Update() error {
 
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		x, y := ebiten.CursorPosition()
+		g.textField.X = x
+		g.textField.Y = y
+		g.textField.Text = ""
+	}
+
+	g.touchIDs = ebiten.AppendTouchIDs(g.touchIDs[:0])
+	for _, id := range g.touchIDs {
+		x, y := ebiten.TouchPosition(id)
 		g.textField.X = x
 		g.textField.Y = y
 		g.textField.Text = ""
