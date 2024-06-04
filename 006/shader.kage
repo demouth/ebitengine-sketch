@@ -1,3 +1,6 @@
+// Shader Art Coding Introduction
+// https://www.shadertoy.com/view/mtyGWy
+
 //go:build ignore
 
 //kage:unit pixels
@@ -5,7 +8,6 @@
 package main
 
 var Time float
-var Cursor vec2
 
 func colorPalette(t float) vec3 {
 	a := vec3(0.5, 0.5, 0.5)
