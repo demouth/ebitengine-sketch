@@ -7,7 +7,7 @@ require (
 	github.com/hajimehoshi/ebiten/v2 v2.7.0-alpha.9.0.20240324113631-04c4676b7cd3
 	github.com/matryer/is v1.4.1
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/image v0.15.0
+	golang.org/x/image v0.18.0
 	golang.org/x/sys v0.18.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
