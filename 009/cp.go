@@ -82,6 +82,7 @@ func (c *Ebitencp) Draw(screen *ebiten.Image, space *cp.Space) {
 			path.LineTo(
 				float32(tb.X)+float32(screenWidth)/2,
 				float32(tb.Y)+float32(screenHeight)/2)
+			path.Close()
 		}
 	})
 	var vs []ebiten.Vertex
