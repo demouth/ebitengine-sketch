@@ -71,12 +71,12 @@ type Game struct {
 
 func (g *Game) Update() error {
 	g.count++
-	if g.numShapes < 300 && g.count%10 == 0 {
+	if g.numShapes < 150 && g.count%15 == 0 {
 
 		g.numShapes++
-		addCircle(g.space, rand.Float64()*15+3, rand.Float64()*10, rand.Float64()*2-150)
+		addCircle(g.space, rand.Float64()*15+10, rand.Float64()*10, rand.Float64()*2-150)
 		g.numShapes++
-		addBox(g.space, rand.Float64()*15+3, rand.Float64()*15+3, rand.Float64()*10, rand.Float64()*2-150)
+		addBox(g.space, rand.Float64()*15+10, rand.Float64()*15+10, rand.Float64()*10, rand.Float64()*2-150)
 	}
 	g.space.Step(1.0 / 60.0)
 	return nil
