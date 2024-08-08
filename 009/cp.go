@@ -1,7 +1,6 @@
 package main
 
 import (
-	"image"
 	"image/color"
 	"math"
 
@@ -12,10 +11,6 @@ import (
 
 var (
 	whiteImage = ebiten.NewImage(3, 3)
-
-	// whiteSubImage is an internal sub image of whiteImage.
-	// Use whiteSubImage at DrawTriangles instead of whiteImage in order to avoid bleeding edges.
-	whiteSubImage = whiteImage.SubImage(image.Rect(1, 1, 2, 2)).(*ebiten.Image)
 )
 
 func init() {
@@ -28,8 +23,17 @@ type Ebitencp struct {
 func (c *Ebitencp) Draw(screen *ebiten.Image, space *cp.Space) {
 	screenWidth := screen.Bounds().Dx()
 	screenHeight := screen.Bounds().Dy()
-	var path vector.Path
+	var awakingPath *vector.Path = &vector.Path{}
+	var sleptPath *vector.Path = &vector.Path{}
+	var path *vector.Path = nil
 	space.EachShape(func(shape *cp.Shape) {
+		if shape.Body().IsSleeping() {
+			path = sleptPath
+		} else if shape.Body().IdleTime() > shape.Space().SleepTimeThreshold {
+			path = sleptPath
+		} else {
+			path = awakingPath
+		}
 		switch shape.Class.(type) {
 		case *cp.Circle:
 			circle := shape.Class.(*cp.Circle)
@@ -75,7 +79,6 @@ func (c *Ebitencp) Draw(screen *ebiten.Image, space *cp.Space) {
 			segment := shape.Class.(*cp.Segment)
 			ta := segment.TransformA()
 			tb := segment.TransformB()
-			// segment.B()
 			path.MoveTo(
 				float32(ta.X)+float32(screenWidth)/2,
 				float32(ta.Y)+float32(screenHeight)/2)
@@ -85,6 +88,15 @@ func (c *Ebitencp) Draw(screen *ebiten.Image, space *cp.Space) {
 			path.Close()
 		}
 	})
+	draw(screen, *sleptPath, 0.5, 0.5, 0.5, 1)
+	draw(screen, *awakingPath, 0.2, 0.9, 0.5, 1)
+}
+
+func draw(
+	screen *ebiten.Image,
+	path vector.Path,
+	r, g, b, a float32,
+) {
 	var vs []ebiten.Vertex
 	var is []uint16
 	sop := &vector.StrokeOptions{}
@@ -94,10 +106,10 @@ func (c *Ebitencp) Draw(screen *ebiten.Image, space *cp.Space) {
 	for i := range vs {
 		vs[i].SrcX = 1
 		vs[i].SrcY = 1
-		vs[i].ColorR = 0x33 / float32(0xff)
-		vs[i].ColorG = 0xcc / float32(0xff)
-		vs[i].ColorB = 0x66 / float32(0xff)
-		vs[i].ColorA = 1
+		vs[i].ColorR = r
+		vs[i].ColorG = g
+		vs[i].ColorB = b
+		vs[i].ColorA = a
 	}
 	op := &ebiten.DrawTrianglesOptions{}
 	op.FillRule = ebiten.NonZero

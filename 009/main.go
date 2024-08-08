@@ -47,13 +47,16 @@ var (
 func simpleTerrain() *cp.Space {
 	space := cp.NewSpace()
 	space.Iterations = 10
+	space.SleepTimeThreshold = 0.5
 	space.SetCollisionSlop(0.5)
 
 	offset := cp.Vector{X: -320, Y: -240}
 	for i := 0; i < len(simpleTerrainVerts)-1; i++ {
 		a := simpleTerrainVerts[i]
 		b := simpleTerrainVerts[i+1]
-		space.AddShape(cp.NewSegment(space.StaticBody, a.Add(offset), b.Add(offset), 0))
+		shape := cp.NewSegment(space.StaticBody, a.Add(offset), b.Add(offset), 0)
+		space.AddShape(shape)
+		shape.SetFriction(0.8)
 	}
 
 	return space
