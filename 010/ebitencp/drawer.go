@@ -56,7 +56,7 @@ func NewDrawer(screenWidth, screenHeight int) *Drawer {
 
 func (d *Drawer) drawWithVerticesAndIndices(screen *ebiten.Image, vertices []ebiten.Vertex, indices []uint16) {
 	op := &ebiten.DrawTrianglesOptions{}
-	op.FillRule = ebiten.NonZero
+	op.FillRule = ebiten.FillAll
 	// op.AntiAlias = true
 	screen.DrawTriangles(vertices, indices, whiteImage, op)
 }
