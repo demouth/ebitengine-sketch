@@ -1,5 +1,7 @@
 package main
 
+// This is based on "jakecoffman/cp-examples/chains".
+
 import (
 	"fmt"
 	_ "image/png"
@@ -23,16 +25,14 @@ const (
 )
 
 type Game struct {
-	count int
-
-	numShapes int
-
-	space *cp.Space
-
+	count  int
+	space  *cp.Space
 	drawer *ebitencp.Drawer
 }
 
 func (g *Game) Update() error {
+	g.drawer.HandleMouseEvent(g.space)
+
 	g.space.Step(1 / 60.0)
 	return nil
 }
@@ -43,9 +43,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	cp.DrawSpace(g.space, g.drawer)
 
 	msg := fmt.Sprintf(
-		"FPS: %0.2f\nNum Circles: %d",
+		"FPS: %0.2f",
 		ebiten.ActualFPS(),
-		g.numShapes,
 	)
 	ebitenutil.DebugPrint(screen, msg)
 }
@@ -55,7 +54,8 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
-	game := &Game{}
+
+	// chipmunk init
 
 	space := cp.NewSpace()
 	space.Iterations = 30
@@ -119,6 +119,9 @@ func main() {
 	shape.SetElasticity(0)
 	shape.SetFriction(0.9)
 
+	// ebitengine init
+
+	game := &Game{}
 	game.space = space
 	game.drawer = ebitencp.NewDrawer(screenWidth, screenHeight)
 
