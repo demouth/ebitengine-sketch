@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	screenWidth  = 600
-	screenHeight = 600
+	screenWidth  = 900
+	screenHeight = 900
 	hwidth       = screenWidth / 2
 	hheight      = screenHeight / 2
 )
@@ -33,7 +33,7 @@ type Game struct {
 
 func (g *Game) Update() error {
 	g.count++
-	if g.numFruits < 80 && g.count%5 == 0 {
+	if g.numFruits < 400 && g.count%2 == 0 {
 		addRandomFruit(g.space)
 		g.numFruits++
 	}
@@ -87,7 +87,7 @@ func main() {
 	// chipmunk init
 
 	space := cp.NewSpace()
-	space.Iterations = 10
+	space.Iterations = 40
 	space.SetGravity(cp.Vector{X: 0, Y: -500})
 	space.SleepTimeThreshold = 0.5
 	space.SetDamping(.99)
@@ -153,24 +153,5 @@ func addFruit(space *cp.Space, img image.Image, tp int) {
 	body.UserData = tp
 	fruit := space.AddShape(cp.NewPolyShape(body, len(line.Verts), line.Verts, cp.NewTransformIdentity(), 0))
 	fruit.SetElasticity(.5)
-	// or use the outline of the shape with lines if you don't want a polygon
-	for i := 0; i < len(line.Verts)-1; i++ {
-		a := line.Verts[i]
-		b := line.Verts[i+1]
-		AddSegment(space, body, a, b, 0)
-	}
-}
-
-func AddSegment(space *cp.Space, body *cp.Body, a, b cp.Vector, radius float64) *cp.Shape {
-	// swap so we always draw the same direction horizontally
-	if a.X < b.X {
-		a, b = b, a
-	}
-
-	seg := cp.NewSegment(body, a, b, radius).Class.(*cp.Segment)
-	shape := space.AddShape(seg.Shape)
-	shape.SetElasticity(0)
-	shape.SetFriction(0.7)
-
-	return shape
+	fruit.SetFriction(0.7)
 }
