@@ -32,7 +32,7 @@ type Game struct {
 
 func (g *Game) Update() error {
 	g.count++
-	if g.count%10 == 0 {
+	if g.count%10 == 0 && g.count < 900 {
 		addRandomFruit(g.space)
 	}
 
@@ -126,10 +126,10 @@ func main() {
 		shape.SetFriction(0.4)
 	}
 
-	space.NewCollisionHandler(assets.Apple, assets.Apple).BeginFunc = BeginFunc
-	space.NewCollisionHandler(assets.Grape, assets.Grape).BeginFunc = BeginFunc
-	space.NewCollisionHandler(assets.Pineapple, assets.Pineapple).BeginFunc = BeginFunc
-	space.NewCollisionHandler(assets.Watermelon, assets.Watermelon).BeginFunc = BeginFunc
+	// space.NewCollisionHandler(assets.Apple, assets.Apple).BeginFunc = BeginFunc
+	// space.NewCollisionHandler(assets.Grape, assets.Grape).BeginFunc = BeginFunc
+	// space.NewCollisionHandler(assets.Pineapple, assets.Pineapple).BeginFunc = BeginFunc
+	// space.NewCollisionHandler(assets.Watermelon, assets.Watermelon).BeginFunc = BeginFunc
 
 	// ebitengine init
 
@@ -145,7 +145,7 @@ func main() {
 }
 
 func addRandomFruit(space *cp.Space) *cp.Shape {
-	j := rand.Intn(4)
+	j := rand.Intn(7)
 	var shape *cp.Shape
 	switch j {
 	case 0:
@@ -160,43 +160,27 @@ func addRandomFruit(space *cp.Space) *cp.Shape {
 	case 3:
 		shape := addFruit(space, assets.Watermelon)
 		shape.SetCollisionType(assets.Watermelon)
+	case 4:
+		shape := addFruit(space, assets.Orange)
+		shape.SetCollisionType(assets.Orange)
+	case 5:
+		shape := addFruit(space, assets.Melon)
+		shape.SetCollisionType(assets.Melon)
+	case 6:
+		shape := addFruit(space, assets.Whiteradish)
+		shape.SetCollisionType(assets.Whiteradish)
 	}
 	return shape
 }
 
 func addFruit(space *cp.Space, tp int) *cp.Shape {
 	imgSet := assets.Get(tp)
-	img := imgSet.Image
-	b := img.Bounds()
-	bb := cp.BB{L: float64(b.Min.X), B: float64(b.Min.Y), R: float64(b.Max.X), T: float64(b.Max.Y)}
 
-	sampleFunc := func(point cp.Vector) float64 {
-		x := point.X
-		y := point.Y
-		rect := img.Bounds()
-
-		if x < float64(rect.Min.X) || x > float64(rect.Max.X) || y < float64(rect.Min.Y) || y > float64(rect.Max.Y) {
-			return 0.0
-		}
-		_, _, _, a := img.At(int(x), int(y)).RGBA()
-		return float64(a) / 0xffff
-	}
-
-	//lineSet := MarchHard(bb, 100, 100, 0.2, PolyLineCollectSegment, sampleFunc)
-	lineSet := cp.MarchSoft(bb, 300, 300, 0.5, cp.PolyLineCollectSegment, sampleFunc)
-
-	line := lineSet.Lines[0].SimplifyCurves(.9)
-	offset := cp.Vector{X: float64(b.Max.X-b.Min.X) / 2., Y: float64(b.Max.Y-b.Min.Y) / 2.}
-	// center the verts on origin
-	for i, l := range line.Verts {
-		line.Verts[i] = l.Sub(offset).Mult(imgSet.Scale)
-	}
-
-	body := space.AddBody(cp.NewBody(10, cp.MomentForPoly(10, len(line.Verts), line.Verts, cp.Vector{}, 1)))
+	body := space.AddBody(cp.NewBody(10, cp.MomentForPoly(10, len(imgSet.Vectors), imgSet.Vectors, cp.Vector{}, 1)))
 	body.SetPosition(cp.Vector{X: float64(rand.Intn(screenWidth)-hwidth) * 0.99, Y: float64(hheight - rand.Intn(100))})
 	body.SetAngle(rand.Float64() * math.Pi * 2)
 	body.UserData = tp
-	fruit := space.AddShape(cp.NewPolyShape(body, len(line.Verts), line.Verts, cp.NewTransformIdentity(), 0))
+	fruit := space.AddShape(cp.NewPolyShape(body, len(imgSet.Vectors), imgSet.Vectors, cp.NewTransformIdentity(), 0))
 	fruit.SetElasticity(.7)
 	fruit.SetFriction(0.5)
 	return fruit
