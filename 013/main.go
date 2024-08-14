@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	"image"
 	_ "image/png"
 	"log"
 	"math"
@@ -19,8 +18,8 @@ import (
 )
 
 const (
-	screenWidth  = 600
-	screenHeight = 600
+	screenWidth  = 900
+	screenHeight = 900
 	hwidth       = screenWidth / 2
 	hheight      = screenHeight / 2
 )
@@ -58,7 +57,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			circle := shape.Class.(*cp.PolyShape)
 			vec := circle.Body().Position()
 
-			img := assets.Get(circle.Body().UserData.(int)).EbitenImage
+			imgSet := assets.Get(circle.Body().UserData.(int))
+			img := imgSet.EbitenImage
 			size := img.Bounds().Size()
 
 			op := &ebiten.DrawImageOptions{}
@@ -67,6 +67,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			op.GeoM.Translate(float64(size.X), 0)
 			op.GeoM.Translate(-float64(size.X)/2, -float64(size.Y)/2)
 			op.GeoM.Rotate(-circle.Body().Angle() + math.Pi)
+			op.GeoM.Scale(imgSet.Scale, imgSet.Scale)
 			op.GeoM.Translate(screenWidth/2, screenHeight/2)
 			op.GeoM.Translate(vec.X, -vec.Y)
 			screen.DrawImage(img, op)
@@ -148,26 +149,24 @@ func addRandomFruit(space *cp.Space) *cp.Shape {
 	var shape *cp.Shape
 	switch j {
 	case 0:
-		is := assets.Get(assets.Apple)
-		shape := addFruit(space, is.Image, assets.Apple)
+		shape := addFruit(space, assets.Apple)
 		shape.SetCollisionType(assets.Apple)
 	case 1:
-		is := assets.Get(assets.Grape)
-		shape := addFruit(space, is.Image, assets.Grape)
+		shape := addFruit(space, assets.Grape)
 		shape.SetCollisionType(assets.Grape)
 	case 2:
-		is := assets.Get(assets.Pineapple)
-		shape := addFruit(space, is.Image, assets.Pineapple)
+		shape := addFruit(space, assets.Pineapple)
 		shape.SetCollisionType(assets.Pineapple)
 	case 3:
-		is := assets.Get(assets.Watermelon)
-		shape := addFruit(space, is.Image, assets.Watermelon)
+		shape := addFruit(space, assets.Watermelon)
 		shape.SetCollisionType(assets.Watermelon)
 	}
 	return shape
 }
 
-func addFruit(space *cp.Space, img image.Image, tp int) *cp.Shape {
+func addFruit(space *cp.Space, tp int) *cp.Shape {
+	imgSet := assets.Get(tp)
+	img := imgSet.Image
 	b := img.Bounds()
 	bb := cp.BB{L: float64(b.Min.X), B: float64(b.Min.Y), R: float64(b.Max.X), T: float64(b.Max.Y)}
 
@@ -190,7 +189,7 @@ func addFruit(space *cp.Space, img image.Image, tp int) *cp.Shape {
 	offset := cp.Vector{X: float64(b.Max.X-b.Min.X) / 2., Y: float64(b.Max.Y-b.Min.Y) / 2.}
 	// center the verts on origin
 	for i, l := range line.Verts {
-		line.Verts[i] = l.Sub(offset)
+		line.Verts[i] = l.Sub(offset).Mult(imgSet.Scale)
 	}
 
 	body := space.AddBody(cp.NewBody(10, cp.MomentForPoly(10, len(line.Verts), line.Verts, cp.Vector{}, 1)))

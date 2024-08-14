@@ -53,6 +53,7 @@ var (
 type ImageSet struct {
 	EbitenImage *ebiten.Image
 	Image       image.Image
+	Scale       float64
 }
 
 func init() {
@@ -64,10 +65,10 @@ func init() {
 	melonPngImage, melonImage = loadImage(melon_png)
 
 	assets = map[int]ImageSet{
-		Apple:      {EbitenImage: appleImage, Image: applePngImage},
-		Grape:      {EbitenImage: grapeImage, Image: grapePngImage},
-		Pineapple:  {EbitenImage: pineappleImage, Image: pineapplePngImage},
-		Watermelon: {EbitenImage: watermelonImage, Image: watermelonPngImage},
+		Apple:      {EbitenImage: appleImage, Image: applePngImage, Scale: 1.2},
+		Grape:      {EbitenImage: grapeImage, Image: grapePngImage, Scale: 1},
+		Pineapple:  {EbitenImage: pineappleImage, Image: pineapplePngImage, Scale: 0.7},
+		Watermelon: {EbitenImage: watermelonImage, Image: watermelonPngImage, Scale: 2},
 		// Orange:     {EbitenImage: orangeImage, Image: orangePngImage},
 		// Melon:      {EbitenImage: melonImage, Image: melonPngImage},
 	}
