@@ -1,5 +1,5 @@
-github.com/demouth/ebitencp v1.0.1 h1:u2py0GItYiL0B1j1/kOrISQDHrxV7Z1kxGrMdYTbTJA=
-github.com/demouth/ebitencp v1.0.1/go.mod h1:LP4IS+qEcpp5CiZDi8RiAUNx4ops4D0F2ZsbSqGR5NQ=
+github.com/demouth/ebitencp v1.1.0 h1:n9FxnqzKYLZqNEJEcqe5MzJPhhiMxBhT2JcL2fLoXPs=
+github.com/demouth/ebitencp v1.1.0/go.mod h1:LP4IS+qEcpp5CiZDi8RiAUNx4ops4D0F2ZsbSqGR5NQ=
 github.com/ebitengine/gomobile v0.0.0-20240802043200-192f051f4fcc h1:76TYsaP1F48tiQRlrr71NsbfxBcFM9/8bEHS9/JbsQg=
 github.com/ebitengine/gomobile v0.0.0-20240802043200-192f051f4fcc/go.mod h1:RM/c3pvru6dRqgGEW7RCTb6czFXYAa3MxbXu3u8/dcI=
 github.com/ebitengine/hideconsole v1.0.0 h1:5J4U0kXF+pv/DhiXt5/lTz0eO5ogJ1iXb8Yj1yReDqE=

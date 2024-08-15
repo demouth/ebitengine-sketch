@@ -12,74 +12,75 @@ import (
 )
 
 const (
-	Apple = 1 + iota
-	Grape
-	Pineapple
-	Watermelon
-	Orange
-	Melon
+	Tomato Kind = 1 + iota
+	Onion
+	Eggplant
+	Cucumber
+	Carrot
+	Pumpkin
 	Whiteradish
+
+	Min Kind = Tomato
+	Max Kind = Whiteradish
 )
 
 var (
-	appleImage       *ebiten.Image
-	grapeImage       *ebiten.Image
-	orangeImage      *ebiten.Image
-	pineappleImage   *ebiten.Image
-	melonImage       *ebiten.Image
-	watermelonImage  *ebiten.Image
-	whiteradishImage *ebiten.Image
-
-	applePngImage       image.Image
-	grapePngImage       image.Image
-	orangePngImage      image.Image
-	pineapplePngImage   image.Image
-	melonPngImage       image.Image
-	watermelonPngImage  image.Image
-	whiteradishPngImage image.Image
-
 	//go:embed tomato.png
-	apple_png []byte
-	//go:embed kyuri.png
-	grape_png []byte
-	//go:embed tama.png
-	orange_png []byte
-	//go:embed kabo.png
-	pineapple_png []byte
-	//go:embed nasu.png
-	melon_png []byte
-	//go:embed nin.png
-	watermelon_png []byte
-	//go:embed dai.png
+	tomato_png []byte
+	//go:embed cucumber.png
+	cucumber_png []byte
+	//go:embed onion.png
+	onion_png []byte
+	//go:embed pumpkin.png
+	pumpkin_png []byte
+	//go:embed eggplant.png
+	eggplant_png []byte
+	//go:embed carrot.png
+	carrot_png []byte
+	//go:embed whiteradish.png
 	whiteradish_png []byte
 
-	assets map[int]ImageSet
+	assets map[Kind]ImageSet
 )
+
+type Kind int
+
+func (k Kind) Next() (hasNext bool, next Kind) {
+	if k < Max {
+		return true, k + 1
+	}
+	return false, 0
+}
+
+func (k Kind) Score() int {
+	return Get(k).Score
+}
 
 type ImageSet struct {
 	EbitenImage *ebiten.Image
 	Image       image.Image
 	Scale       float64
 	Vectors     []cp.Vector
+	Score       int
 }
 
 func init() {
-	applePngImage, appleImage = loadImage(apple_png)
-	grapePngImage, grapeImage = loadImage(grape_png)
-	pineapplePngImage, pineappleImage = loadImage(pineapple_png)
-	watermelonPngImage, watermelonImage = loadImage(watermelon_png)
-	orangePngImage, orangeImage = loadImage(orange_png)
-	melonPngImage, melonImage = loadImage(melon_png)
-	whiteradishPngImage, whiteradishImage = loadImage(whiteradish_png)
+	tomatoPngImage, tomatoImage := loadImage(tomato_png)
+	cucumberPngImage, cucumberImage := loadImage(cucumber_png)
+	pumpkinPngImage, pumpkinImage := loadImage(pumpkin_png)
+	carrotPngImage, carrotImage := loadImage(carrot_png)
+	onionPngImage, onionImage := loadImage(onion_png)
+	eggplantPngImage, eggplantImage := loadImage(eggplant_png)
+	whiteradishPngImage, whiteradishImage := loadImage(whiteradish_png)
 
-	assets = map[int]ImageSet{
-		Apple:       makeImageSet(appleImage, applePngImage, 0.5),
-		Grape:       makeImageSet(grapeImage, grapePngImage, 0.8),
-		Pineapple:   makeImageSet(pineappleImage, pineapplePngImage, 0.9),
-		Watermelon:  makeImageSet(watermelonImage, watermelonPngImage, 0.4),
-		Orange:      makeImageSet(orangeImage, orangePngImage, 0.7),
-		Melon:       makeImageSet(melonImage, melonPngImage, 0.5),
-		Whiteradish: makeImageSet(whiteradishImage, whiteradishPngImage, 0.5),
+	assets = map[Kind]ImageSet{
+		Tomato:      makeImageSet(tomatoImage, tomatoPngImage, 0.4, 10),
+		Onion:       makeImageSet(onionImage, onionPngImage, 1.0, 20),
+		Eggplant:    makeImageSet(eggplantImage, eggplantPngImage, 1.2, 30),
+		Cucumber:    makeImageSet(cucumberImage, cucumberPngImage, 1.4, 40),
+		Carrot:      makeImageSet(carrotImage, carrotPngImage, 1.1, 50),
+		Pumpkin:     makeImageSet(pumpkinImage, pumpkinPngImage, 1.9, 60),
+		Whiteradish: makeImageSet(whiteradishImage, whiteradishPngImage, 1.2, 70),
 	}
 }
 
@@ -97,7 +98,7 @@ func loadImage(b []byte) (image.Image, *ebiten.Image) {
 	return img, ebitenImage
 }
 
-func Get(tp int) ImageSet {
+func Get(tp Kind) ImageSet {
 	is, ok := assets[tp]
 	if !ok {
 		log.Fatalf("image %d not found", tp)
@@ -109,16 +110,28 @@ func Length() int {
 	return len(assets)
 }
 
+func Exists(tp Kind) bool {
+	return tp >= Min && tp <= Max
+}
+
+func ForEach(f func(Kind, ImageSet)) {
+	for i, v := range assets {
+		f(i, v)
+	}
+}
+
 func makeImageSet(
 	ebitenImage *ebiten.Image,
 	image image.Image,
 	scale float64,
+	score int,
 ) ImageSet {
 	is := ImageSet{
 		EbitenImage: ebitenImage,
 		Image:       image,
 		Scale:       scale,
 		Vectors:     makeVector(image, scale),
+		Score:       score,
 	}
 	return is
 }

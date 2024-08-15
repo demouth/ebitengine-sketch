@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 	_ "image/png"
 	"log"
 	"math"
@@ -13,15 +14,25 @@ import (
 	"github.com/demouth/ebitengine-sketch/013/assets"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 
 	"github.com/jakecoffman/cp/v2"
 )
 
+var (
+	bgImage       = ebiten.NewImage(100, 50)
+	whiteSubImage = ebiten.NewImage(3, 3)
+	score         = 0
+	hiscore       = 0
+)
+
 const (
-	screenWidth  = 900
-	screenHeight = 900
-	hwidth       = screenWidth / 2
-	hheight      = screenHeight / 2
+	screenWidth     = 480
+	screenHeight    = 800
+	hwidth          = screenWidth / 2
+	hheight         = screenHeight / 2
+	containerHeight = 600
 )
 
 type Game struct {
@@ -32,13 +43,29 @@ type Game struct {
 
 func (g *Game) Update() error {
 	g.count++
-	if g.count%10 == 0 && g.count < 900 {
+	if g.count%40 == 0 {
 		addRandomFruit(g.space)
 	}
+	resetFlag := false
 
-	// cp.SpaceCollideShapesFunc(shape, shape2, func(arb *cp.Arbiter) {
-	// 	// fmt.Println("collision")
-	// })
+	g.space.EachBody(func(body *cp.Body) {
+		if body.Position().Y > -hheight+containerHeight {
+			resetFlag = true
+			return
+		}
+	})
+	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		resetFlag = true
+	}
+	if resetFlag {
+		g.space.EachShape(func(shape *cp.Shape) {
+			if shape.Body().UserData != nil {
+				g.space.AddPostStepCallback(removeShapeCallback, shape, nil)
+			}
+			hiscore = int(math.Max(float64(score), float64(hiscore)))
+			score = 0
+		})
+	}
 
 	g.drawer.HandleMouseEvent(g.space)
 
@@ -47,17 +74,15 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-
-	g.drawer.Screen = screen
-
+	screen.Fill(color.RGBA{230, 190, 200, 255})
+	screen.DrawImage(bgImage, nil)
 	g.space.EachShape(func(shape *cp.Shape) {
-
 		switch shape.Class.(type) {
 		case *cp.PolyShape:
 			circle := shape.Class.(*cp.PolyShape)
 			vec := circle.Body().Position()
 
-			imgSet := assets.Get(circle.Body().UserData.(int))
+			imgSet := assets.Get(circle.Body().UserData.(assets.Kind))
 			img := imgSet.EbitenImage
 			size := img.Bounds().Size()
 
@@ -73,36 +98,50 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			screen.DrawImage(img, op)
 		}
 	})
-	// cp.DrawSpace(g.space, g.drawer)
+	// cp.DrawSpace(g.space, g.drawer.WithScreen(screen))
+	g.drawUI(screen)
 
-	msg := fmt.Sprintf(
-		"FPS: %0.2f",
+	ebitenutil.DebugPrint(screen, fmt.Sprintf(
+		"FPS: %0.2f\nScore: %d\nHiScore: %d",
 		ebiten.ActualFPS(),
-	)
-	ebitenutil.DebugPrint(screen, msg)
+		score,
+		hiscore,
+	))
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
 }
-func BeginFunc(arb *cp.Arbiter, space *cp.Space, data interface{}) bool {
-	shape, shape2 := arb.Shapes()
 
-	// arb.Ignore()
-	space.AddPostStepCallback(func(space *cp.Space, key interface{}, data interface{}) {
-		if shape.Space() != nil {
-			space.RemoveShape(shape)
-			space.RemoveBody(shape.Body())
-			shape.Body().RemoveShape(shape)
-		}
-		if shape2.Space() != nil {
-			space.RemoveShape(shape2)
-			space.RemoveBody(shape2.Body())
-			shape2.Body().RemoveShape(shape2)
-		}
-	}, nil, nil)
+func (g *Game) drawUI(screen *ebiten.Image) {
 
-	return false
+	var path vector.Path
+	path.MoveTo(0, screenHeight-containerHeight)
+	path.LineTo(screenWidth, screenHeight-containerHeight)
+	path.Close()
+	var vs []ebiten.Vertex
+	var is []uint16
+	sop := &vector.StrokeOptions{}
+	sop.Width = 3
+	sop.LineJoin = vector.LineJoinRound
+	vs, is = path.AppendVerticesAndIndicesForStroke(nil, nil, sop)
+	for i := range vs {
+		vs[i].SrcX = 1
+		vs[i].SrcY = 1
+		vs[i].ColorR = 0xff / float32(0xff)
+		vs[i].ColorG = 0xcc / float32(0xff)
+		vs[i].ColorB = 0xcc / float32(0xff)
+		vs[i].ColorA = 1
+	}
+
+	op := &ebiten.DrawTrianglesOptions{}
+	op.FillRule = ebiten.FillRuleFillAll
+
+	screen.DrawTriangles(vs, is, whiteSubImage, op)
+}
+
+func init() {
+	whiteSubImage.Fill(color.White)
 }
 
 func main() {
@@ -113,7 +152,7 @@ func main() {
 	space.Iterations = 30
 	space.SetGravity(cp.Vector{X: 0, Y: -500})
 	space.SleepTimeThreshold = 0.5
-	space.SetDamping(.99)
+	space.SetDamping(1)
 
 	walls := []cp.Vector{
 		{X: -hwidth, Y: -hheight}, {X: -hwidth, Y: screenHeight * 10},
@@ -126,12 +165,14 @@ func main() {
 		shape.SetFriction(0.4)
 	}
 
-	// space.NewCollisionHandler(assets.Apple, assets.Apple).BeginFunc = BeginFunc
-	// space.NewCollisionHandler(assets.Grape, assets.Grape).BeginFunc = BeginFunc
-	// space.NewCollisionHandler(assets.Pineapple, assets.Pineapple).BeginFunc = BeginFunc
-	// space.NewCollisionHandler(assets.Watermelon, assets.Watermelon).BeginFunc = BeginFunc
+	assets.ForEach(func(i assets.Kind, is assets.ImageSet) {
+		ct := cp.CollisionType(i)
+		space.NewCollisionHandler(ct, ct).BeginFunc = BeginFunc
+	})
 
 	// ebitengine init
+
+	bgImage.Fill(color.Black)
 
 	game := &Game{}
 	game.space = space
@@ -144,44 +185,81 @@ func main() {
 	}
 }
 
-func addRandomFruit(space *cp.Space) *cp.Shape {
-	j := rand.Intn(7)
-	var shape *cp.Shape
-	switch j {
-	case 0:
-		shape := addFruit(space, assets.Apple)
-		shape.SetCollisionType(assets.Apple)
-	case 1:
-		shape := addFruit(space, assets.Grape)
-		shape.SetCollisionType(assets.Grape)
-	case 2:
-		shape := addFruit(space, assets.Pineapple)
-		shape.SetCollisionType(assets.Pineapple)
-	case 3:
-		shape := addFruit(space, assets.Watermelon)
-		shape.SetCollisionType(assets.Watermelon)
-	case 4:
-		shape := addFruit(space, assets.Orange)
-		shape.SetCollisionType(assets.Orange)
-	case 5:
-		shape := addFruit(space, assets.Melon)
-		shape.SetCollisionType(assets.Melon)
-	case 6:
-		shape := addFruit(space, assets.Whiteradish)
-		shape.SetCollisionType(assets.Whiteradish)
-	}
-	return shape
+func addRandomFruit(space *cp.Space) {
+	j := assets.Tomato
+	pos := cp.Vector{X: float64(rand.Intn(screenWidth)-hwidth) * 0.01, Y: float64(-hheight + containerHeight - 10)}
+	addFruit(space, j, pos, rand.Float64()*math.Pi*2)
 }
 
-func addFruit(space *cp.Space, tp int) *cp.Shape {
-	imgSet := assets.Get(tp)
+func addFruit(space *cp.Space, k assets.Kind, position cp.Vector, angle float64) {
+	if !assets.Exists(k) {
+		return
+	}
+	imgSet := assets.Get(k)
 
-	body := space.AddBody(cp.NewBody(10, cp.MomentForPoly(10, len(imgSet.Vectors), imgSet.Vectors, cp.Vector{}, 1)))
-	body.SetPosition(cp.Vector{X: float64(rand.Intn(screenWidth)-hwidth) * 0.99, Y: float64(hheight - rand.Intn(100))})
-	body.SetAngle(rand.Float64() * math.Pi * 2)
-	body.UserData = tp
+	body := space.AddBody(cp.NewBody(0, cp.MomentForPoly(10, len(imgSet.Vectors), imgSet.Vectors, cp.Vector{}, 1)))
+	body.SetPosition(position)
+	body.SetAngle(angle)
+	body.UserData = k
 	fruit := space.AddShape(cp.NewPolyShape(body, len(imgSet.Vectors), imgSet.Vectors, cp.NewTransformIdentity(), 0))
-	fruit.SetElasticity(.7)
-	fruit.SetFriction(0.5)
-	return fruit
+	body.SetMass(fruit.Area() * 0.001)
+	fruit.SetElasticity(0.2)
+	fruit.SetFriction(0.9)
+	fruit.SetCollisionType(cp.CollisionType(k))
+}
+
+type addShapeOptions struct {
+	kind  assets.Kind
+	pos   cp.Vector
+	angle float64
+}
+
+func addShapeCallback(space *cp.Space, key interface{}, data interface{}) {
+	var opt addShapeOptions
+	if i, ok := data.(addShapeOptions); ok {
+		opt = i
+	} else {
+		return
+	}
+	addFruit(space, opt.kind, opt.pos, opt.angle)
+}
+func removeShapeCallback(space *cp.Space, key interface{}, data interface{}) {
+	var s *cp.Shape
+	var ok bool
+	if s, ok = key.(*cp.Shape); !ok {
+		return
+	}
+	space.RemoveBody(s.Body())
+	space.RemoveShape(s)
+}
+func BeginFunc(arb *cp.Arbiter, space *cp.Space, data interface{}) bool {
+	shape, shape2 := arb.Shapes()
+
+	var k assets.Kind
+	if ud, ok := shape.Body().UserData.(assets.Kind); ok {
+		k = ud
+	} else {
+		return false
+	}
+
+	space.AddPostStepCallback(removeShapeCallback, shape, nil)
+	space.AddPostStepCallback(removeShapeCallback, shape2, nil)
+
+	score += k.Score()
+
+	if hasNext, kk := k.Next(); hasNext {
+		k = kk
+	} else {
+		return false
+	}
+	sp := shape.Body().Position().Clone()
+	sp.Sub(shape2.Body().Position()).Mult(0.5).Add(shape2.Body().Position())
+	a := (shape.Body().Angle() + shape2.Body().Angle()) / 2
+	addShapeOptions := addShapeOptions{
+		kind:  k,
+		pos:   sp,
+		angle: a,
+	}
+	space.AddPostStepCallback(addShapeCallback, k, addShapeOptions)
+	return false
 }
