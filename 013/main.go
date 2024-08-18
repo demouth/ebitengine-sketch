@@ -12,6 +12,7 @@ import (
 
 	"github.com/demouth/ebitencp"
 	"github.com/demouth/ebitengine-sketch/013/assets"
+	"github.com/demouth/ebitengine-sketch/013/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -30,77 +31,67 @@ var (
 const (
 	screenWidth     = 480
 	screenHeight    = 800
-	hwidth          = screenWidth / 2
-	hheight         = screenHeight / 2
 	containerHeight = 600
+	paddingBottom   = 100
 )
 
 type Game struct {
-	count  int
-	space  *cp.Space
-	drawer *ebitencp.Drawer
+	count   int
+	space   *cp.Space
+	drawer  *ebitencp.Drawer
+	next    next
+	buttons ui.Components
+}
+
+type next struct {
+	kind  assets.Kind
+	x     float64
+	y     float64
+	angle float64
 }
 
 func (g *Game) Update() error {
 	g.count++
-	if g.count%40 == 0 {
-		addRandomFruit(g.space)
-	}
-	resetFlag := false
-
 	g.space.EachBody(func(body *cp.Body) {
-		if body.Position().Y > -hheight+containerHeight {
-			resetFlag = true
+		if body.Position().Y < screenHeight-containerHeight {
+			g.space.EachShape(func(shape *cp.Shape) {
+				if shape.Body().UserData != nil {
+					g.space.AddPostStepCallback(removeShapeCallback, shape, nil)
+				}
+				hiscore = int(math.Max(float64(score), float64(hiscore)))
+				score = 0
+			})
 			return
 		}
 	})
+	g.next.angle += 0.01
 	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
-		resetFlag = true
+		g.drop()
 	}
-	if resetFlag {
-		g.space.EachShape(func(shape *cp.Shape) {
-			if shape.Body().UserData != nil {
-				g.space.AddPostStepCallback(removeShapeCallback, shape, nil)
-			}
-			hiscore = int(math.Max(float64(score), float64(hiscore)))
-			score = 0
-		})
+	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+		g.moveRight()
 	}
-
+	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		g.moveLeft()
+	}
+	g.buttons.Update()
 	g.drawer.HandleMouseEvent(g.space)
-
 	g.space.Step(1 / 60.0)
 	return nil
 }
-
 func (g *Game) Draw(screen *ebiten.Image) {
-	screen.Fill(color.RGBA{230, 190, 200, 255})
-	screen.DrawImage(bgImage, nil)
+	g.drawBackground(screen)
+	g.drawFruit(screen, g.next.kind, g.next.x, g.next.y-paddingBottom, g.next.angle)
 	g.space.EachShape(func(shape *cp.Shape) {
 		switch shape.Class.(type) {
 		case *cp.PolyShape:
 			circle := shape.Class.(*cp.PolyShape)
 			vec := circle.Body().Position()
-
-			imgSet := assets.Get(circle.Body().UserData.(assets.Kind))
-			img := imgSet.EbitenImage
-			size := img.Bounds().Size()
-
-			op := &ebiten.DrawImageOptions{}
-			op.Filter = ebiten.FilterLinear
-			op.GeoM.Scale(-1, 1)
-			op.GeoM.Translate(float64(size.X), 0)
-			op.GeoM.Translate(-float64(size.X)/2, -float64(size.Y)/2)
-			op.GeoM.Rotate(-circle.Body().Angle() + math.Pi)
-			op.GeoM.Scale(imgSet.Scale, imgSet.Scale)
-			op.GeoM.Translate(screenWidth/2, screenHeight/2)
-			op.GeoM.Translate(vec.X, -vec.Y)
-			screen.DrawImage(img, op)
+			g.drawFruit(screen, circle.Body().UserData.(assets.Kind), vec.X, vec.Y-paddingBottom, circle.Body().Angle())
 		}
 	})
 	// cp.DrawSpace(g.space, g.drawer.WithScreen(screen))
-	g.drawUI(screen)
-
+	g.buttons.Draw(screen)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"FPS: %0.2f\nScore: %d\nHiScore: %d",
 		ebiten.ActualFPS(),
@@ -113,30 +104,86 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
 }
 
-func (g *Game) drawUI(screen *ebiten.Image) {
+func (g *Game) moveRight() {
+	if g.next.x < screenWidth-50 {
+		g.next.x += 4
+	}
+}
+func (g *Game) moveLeft() {
+	if g.next.x > 40 {
+		g.next.x -= 4
+	}
+}
+func (g *Game) drop() {
+	if g.count > 40 {
+		k := g.next.kind
+		addShapeOptions := addShapeOptions{
+			kind:  g.next.kind,
+			pos:   cp.Vector{X: g.next.x, Y: g.next.y},
+			angle: g.next.angle,
+		}
+		g.space.AddPostStepCallback(addShapeCallback, k, addShapeOptions)
+		g.count = 0
+		g.next.kind = assets.Kind(rand.Intn(2) + int(assets.Min))
+	}
+}
+func (g *Game) drawBackground(screen *ebiten.Image) {
+	screen.Fill(color.RGBA{0, 0, 0, 255})
+	screen.DrawImage(bgImage, nil)
 
 	var path vector.Path
-	path.MoveTo(0, screenHeight-containerHeight)
-	path.LineTo(screenWidth, screenHeight-containerHeight)
-	path.Close()
-	var vs []ebiten.Vertex
-	var is []uint16
+
+	path = vector.Path{}
+	path.MoveTo(0, 0)
+	path.LineTo(0, screenHeight-paddingBottom)
+	path.LineTo(screenWidth, screenHeight-paddingBottom)
+	path.LineTo(screenWidth, 0)
+	g.drawFill(screen, path, color.NRGBA{0xff, 0xcc, 0x99, 0xff})
+	g.drawLine(screen, path, color.NRGBA{0xaa, 0x66, 0x33, 0xff}, 5)
+
+	path = vector.Path{}
+	path.MoveTo(0, screenHeight-containerHeight-paddingBottom)
+	path.LineTo(screenWidth, screenHeight-containerHeight-paddingBottom)
+	g.drawLine(screen, path, color.NRGBA{0xdd, 0xaa, 0x99, 0xff}, 3)
+
+	path = vector.Path{}
+	path.MoveTo(0, 0)
+	path.LineTo(0, 50)
+	path.LineTo(100, 50)
+	path.LineTo(100, 0)
+	g.drawFill(screen, path, color.NRGBA{0x00, 0x00, 0x00, 0xff})
+}
+
+func (g *Game) drawLine(screen *ebiten.Image, path vector.Path, c color.NRGBA, width float32) {
 	sop := &vector.StrokeOptions{}
-	sop.Width = 3
+	sop.Width = width
 	sop.LineJoin = vector.LineJoinRound
-	vs, is = path.AppendVerticesAndIndicesForStroke(nil, nil, sop)
+	vs, is := path.AppendVerticesAndIndicesForStroke(nil, nil, sop)
 	for i := range vs {
 		vs[i].SrcX = 1
 		vs[i].SrcY = 1
-		vs[i].ColorR = 0xff / float32(0xff)
-		vs[i].ColorG = 0xcc / float32(0xff)
-		vs[i].ColorB = 0xcc / float32(0xff)
-		vs[i].ColorA = 1
+		vs[i].ColorR = float32(c.R) / float32(0xff)
+		vs[i].ColorG = float32(c.G) / float32(0xff)
+		vs[i].ColorB = float32(c.B) / float32(0xff)
+		vs[i].ColorA = float32(c.A) / float32(0xff)
 	}
-
 	op := &ebiten.DrawTrianglesOptions{}
 	op.FillRule = ebiten.FillRuleFillAll
+	screen.DrawTriangles(vs, is, whiteSubImage, op)
+}
 
+func (g *Game) drawFill(screen *ebiten.Image, path vector.Path, c color.NRGBA) {
+	vs, is := path.AppendVerticesAndIndicesForFilling(nil, nil)
+	for i := range vs {
+		vs[i].SrcX = 1
+		vs[i].SrcY = 1
+		vs[i].ColorR = float32(c.R) / float32(0xff)
+		vs[i].ColorG = float32(c.G) / float32(0xff)
+		vs[i].ColorB = float32(c.B) / float32(0xff)
+		vs[i].ColorA = float32(c.A) / float32(0xff)
+	}
+	op := &ebiten.DrawTrianglesOptions{}
+	op.FillRule = ebiten.FillRuleFillAll
 	screen.DrawTriangles(vs, is, whiteSubImage, op)
 }
 
@@ -150,17 +197,17 @@ func main() {
 
 	space := cp.NewSpace()
 	space.Iterations = 30
-	space.SetGravity(cp.Vector{X: 0, Y: -500})
+	space.SetGravity(cp.Vector{X: 0, Y: 500})
 	space.SleepTimeThreshold = 0.5
 	space.SetDamping(1)
 
 	walls := []cp.Vector{
-		{X: -hwidth, Y: -hheight}, {X: -hwidth, Y: screenHeight * 10},
-		{X: hwidth, Y: -hheight}, {X: hwidth, Y: screenHeight * 10},
-		{X: -hwidth, Y: -hheight}, {X: hwidth, Y: -hheight},
+		{X: 0, Y: 0}, {X: 0, Y: screenHeight},
+		{X: screenWidth, Y: 0}, {X: screenWidth, Y: screenHeight},
+		{X: 0, Y: screenHeight}, {X: screenWidth, Y: screenHeight},
 	}
 	for i := 0; i < len(walls)-1; i += 2 {
-		shape := space.AddShape(cp.NewSegment(space.StaticBody, walls[i], walls[i+1], 0))
+		shape := space.AddShape(cp.NewSegment(space.StaticBody, walls[i], walls[i+1], 1))
 		shape.SetElasticity(0.6)
 		shape.SetFriction(0.4)
 	}
@@ -177,6 +224,20 @@ func main() {
 	game := &Game{}
 	game.space = space
 	game.drawer = ebitencp.NewDrawer(screenWidth, screenHeight)
+	game.drawer.FlipYAxis = true
+	game.drawer.Camera.Offset = cp.Vector{X: screenWidth / 2, Y: screenHeight/2 + paddingBottom}
+	game.next = next{kind: assets.Tomato, x: screenWidth / 2, y: screenHeight - containerHeight + 10, angle: 0}
+	game.buttons = ui.Components{
+		&ui.Button{X: 100, Y: screenHeight - 70, Width: 50, Height: 40, FontSize: 10, Text: "<-", OnMouseDownHold: func() {
+			game.moveLeft()
+		}},
+		&ui.Button{X: 200, Y: screenHeight - 70, Width: 80, Height: 40, FontSize: 10, Text: "Drop", OnMouseDownHold: func() {
+			game.drop()
+		}},
+		&ui.Button{X: 330, Y: screenHeight - 70, Width: 50, Height: 40, FontSize: 10, Text: "->", OnMouseDownHold: func() {
+			game.moveRight()
+		}},
+	}
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Ebitengine + Chipmunk Physics")
@@ -187,7 +248,7 @@ func main() {
 
 func addRandomFruit(space *cp.Space) {
 	j := assets.Tomato
-	pos := cp.Vector{X: float64(rand.Intn(screenWidth)-hwidth) * 0.01, Y: float64(-hheight + containerHeight - 10)}
+	pos := cp.Vector{X: screenWidth / 2, Y: screenHeight - containerHeight + 10}
 	addFruit(space, j, pos, rand.Float64()*math.Pi*2)
 }
 
@@ -206,6 +267,19 @@ func addFruit(space *cp.Space, k assets.Kind, position cp.Vector, angle float64)
 	fruit.SetElasticity(0.2)
 	fruit.SetFriction(0.9)
 	fruit.SetCollisionType(cp.CollisionType(k))
+}
+func (g *Game) drawFruit(screen *ebiten.Image, kind assets.Kind, x, y, angle float64) {
+	imgSet := assets.Get(kind)
+	img := imgSet.EbitenImage
+	size := img.Bounds().Size()
+
+	op := &ebiten.DrawImageOptions{}
+	op.Filter = ebiten.FilterLinear
+	op.GeoM.Translate(-float64(size.X)/2, -float64(size.Y)/2)
+	op.GeoM.Rotate(angle)
+	op.GeoM.Scale(imgSet.Scale, imgSet.Scale)
+	op.GeoM.Translate(x, y)
+	screen.DrawImage(img, op)
 }
 
 type addShapeOptions struct {
