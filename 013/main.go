@@ -41,6 +41,8 @@ type Game struct {
 	drawer  *ebitencp.Drawer
 	next    next
 	buttons ui.Components
+
+	debug bool
 }
 
 type next struct {
@@ -90,7 +92,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			g.drawFruit(screen, circle.Body().UserData.(assets.Kind), vec.X, vec.Y-paddingBottom, circle.Body().Angle())
 		}
 	})
-	// cp.DrawSpace(g.space, g.drawer.WithScreen(screen))
+	if g.debug {
+		cp.DrawSpace(g.space, g.drawer.WithScreen(screen))
+	}
 	g.buttons.Draw(screen)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"FPS: %0.2f\nScore: %d\nHiScore: %d",
@@ -228,13 +232,16 @@ func main() {
 	game.drawer.Camera.Offset = cp.Vector{X: screenWidth / 2, Y: screenHeight/2 + paddingBottom}
 	game.next = next{kind: assets.Tomato, x: screenWidth / 2, y: screenHeight - containerHeight + 10, angle: 0}
 	game.buttons = ui.Components{
-		&ui.Button{X: 100, Y: screenHeight - 70, Width: 50, Height: 40, FontSize: 10, Text: "<-", OnMouseDownHold: func() {
+		&ui.Button{X: 20, Y: screenHeight - 70, Width: 60, Height: 40, FontSize: 8, Text: "debug", OnMouseDown: func() {
+			game.debug = !game.debug
+		}},
+		&ui.Button{X: 120, Y: screenHeight - 80, Width: 80, Height: 60, FontSize: 14, Text: "<-", OnMouseDownHold: func() {
 			game.moveLeft()
 		}},
-		&ui.Button{X: 200, Y: screenHeight - 70, Width: 80, Height: 40, FontSize: 10, Text: "Drop", OnMouseDownHold: func() {
+		&ui.Button{X: 220, Y: screenHeight - 80, Width: 100, Height: 60, FontSize: 14, Text: "Drop", OnMouseDownHold: func() {
 			game.drop()
 		}},
-		&ui.Button{X: 330, Y: screenHeight - 70, Width: 50, Height: 40, FontSize: 10, Text: "->", OnMouseDownHold: func() {
+		&ui.Button{X: 340, Y: screenHeight - 80, Width: 80, Height: 60, FontSize: 14, Text: "->", OnMouseDownHold: func() {
 			game.moveRight()
 		}},
 	}
