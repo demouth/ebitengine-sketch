@@ -1,10 +1,19 @@
 package minigui
 
 import (
+	"bytes"
+	"fmt"
 	"image/color"
+	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+)
+
+var (
+	textFaceSource *text.GoTextFaceSource
 )
 
 type GUI struct {
@@ -21,6 +30,7 @@ type Component interface {
 	IsComponent()
 }
 type sliderFloat64 struct {
+	label    string
 	value    float64
 	min      float64
 	max      float64
@@ -31,13 +41,19 @@ type sliderFloat64 struct {
 func (s *sliderFloat64) IsComponent() {}
 
 func NewGUI() *GUI {
+	s, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.PressStart2P_ttf))
+	if err != nil {
+		log.Fatal(err)
+	}
+	textFaceSource = s
+
 	whiteImage := ebiten.NewImage(3, 3)
 	whiteImage.Fill(color.White)
 	gui := &GUI{
 		whiteImage:      whiteImage,
 		width:           200,
-		componentHeight: 10,
-		x:               400,
+		componentHeight: 14,
+		x:               190,
 		y:               10,
 	}
 	return gui
@@ -72,6 +88,7 @@ func (g *GUI) Draw(image *ebiten.Image) {
 
 func (g *GUI) AddSliderFloat64(label string, value float64, min, max float64, callback func(v float64)) {
 	s := &sliderFloat64{
+		label:    label,
 		value:    value,
 		min:      min,
 		max:      max,
@@ -95,10 +112,10 @@ func (s *sliderFloat64) Update(x, y, width, height float32) {
 		s.callback(s.value)
 	}
 }
-func (s *sliderFloat64) Draw(image *ebiten.Image, whiteImage *ebiten.Image, x, y, width, height float32) {
+func (s *sliderFloat64) Draw(image *ebiten.Image, whiteImage *ebiten.Image, top, left, width, height float32) {
 	padding := float32(1)
-	x = x + width/2 + padding
-	y = y + padding
+	x := top + width/2 + padding
+	y := left + padding
 	w := width/2 - padding*2
 	h := height - padding*2
 	c := color.NRGBA{0x66, 0x66, 0x66, 0xff}
@@ -113,6 +130,32 @@ func (s *sliderFloat64) Draw(image *ebiten.Image, whiteImage *ebiten.Image, x, y
 	drawWidth := drawRange * ratio
 
 	drawLine(image, whiteImage, x+drawWidth, y, x+drawWidth, y+h, 1, color.NRGBA{0x2c, 0xc9, 0xff, 0xff})
+
+	paddingTop := float32(3)
+	paddingLeft := float32(3)
+
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(float64(top+paddingTop), float64(left+paddingLeft))
+	op.ColorScale.ScaleWithColor(color.NRGBA{R: 0xeb, G: 0xeb, B: 0xeb, A: 0xff})
+	op.LineSpacing = 0
+	op.PrimaryAlign = text.AlignStart
+	text.Draw(image, s.label, &text.GoTextFace{
+		Source: textFaceSource,
+		Size:   8,
+	}, op)
+
+	op = &text.DrawOptions{}
+	op.GeoM.Translate(float64(x+paddingTop), float64(left+paddingLeft))
+	op.ColorScale.ScaleWithColor(color.NRGBA{R: 0xeb, G: 0xeb, B: 0xeb, A: 0xff})
+	op.LineSpacing = 0
+	op.PrimaryAlign = text.AlignStart
+	text.Draw(
+		image,
+		fmt.Sprintf("%.3f", s.value),
+		&text.GoTextFace{
+			Source: textFaceSource,
+			Size:   8,
+		}, op)
 }
 
 func drawLine(screen *ebiten.Image, whiteImage *ebiten.Image, x1, y1, x2, y2, width float32, c color.NRGBA) {

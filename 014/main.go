@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	screenWidth  = 640
-	screenHeight = 640
+	screenWidth  = 400
+	screenHeight = 400
 	hwidth       = screenWidth / 2
 	hheight      = screenHeight / 2
 
@@ -123,7 +123,7 @@ func main() {
 	game := &Game{}
 
 	space := cp.NewSpace()
-	gravity := cp.Vector{X: 0, Y: 100}
+	gravity := cp.Vector{X: game.gx, Y: game.gy}
 	space.SetGravity(gravity)
 	game.space = space
 
@@ -138,12 +138,12 @@ func main() {
 
 	// gui
 	gui := minigui.NewGUI()
-	gui.AddSliderFloat64("Gravity X", gravity.X, -1000, 1000, func(v float64) {
+	gui.AddSliderFloat64("Gravity X", gravity.X, -500, 500, func(v float64) {
 		game.gx = v
 		gravity := cp.Vector{X: v, Y: game.gy}
 		space.SetGravity(gravity)
 	})
-	gui.AddSliderFloat64("Gravity Y", gravity.X, -1000, 1000, func(v float64) {
+	gui.AddSliderFloat64("Gravity Y", gravity.X, -500, 500, func(v float64) {
 		game.gy = v
 		gravity := cp.Vector{X: game.gx, Y: v}
 		space.SetGravity(gravity)
