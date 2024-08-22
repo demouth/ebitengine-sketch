@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/rand/v2"
 
+	"github.com/demouth/ebitengine-sketch/014/minigui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/images"
@@ -39,20 +40,33 @@ type Game struct {
 	count int
 
 	space *cp.Space
+
+	gui *minigui.GUI
+	gx  float64
+	gy  float64
 }
 
 func (g *Game) Update() error {
 	g.count++
-	for i := 0; i < 5; i++ {
-		addCircle(g.space, 10, rand.Float64()*10-5, -screenHeight/2+10)
-	}
+	addCircle(g.space, 10, rand.Float64()*10-5, 0)
 
 	g.space.EachBody(func(body *cp.Body) {
+		remove := false
 		if body.Position().Y > hheight {
+			remove = true
+		} else if body.Position().X < -hwidth {
+			remove = true
+		} else if body.Position().X > hwidth {
+			remove = true
+		} else if body.Position().Y < -hheight {
+			remove = true
+		}
+		if remove {
 			g.space.AddPostStepCallback(removeBodyCallback, body, nil)
-			return
 		}
 	})
+
+	g.gui.Update()
 
 	g.space.Step(1.0 / 60.0)
 	return nil
@@ -89,6 +103,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	})
 
+	g.gui.Draw(screen)
+
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"FPS: %0.2f\nNumCircle: %v",
 		ebiten.ActualFPS(),
@@ -107,12 +123,10 @@ func main() {
 	game := &Game{}
 
 	space := cp.NewSpace()
-	space.SetGravity(cp.Vector{X: 0, Y: 200})
+	gravity := cp.Vector{X: 0, Y: 100}
+	space.SetGravity(gravity)
 	game.space = space
 
-	for i := 0; i < 1; i++ {
-		addCircle(space, 10, rand.Float64()*2-1, rand.Float64()*2-1)
-	}
 	addWall(space, -100, 100, +100, 100, 5)
 
 	// Decode an image from the image file's byte slice.
@@ -121,6 +135,20 @@ func main() {
 		log.Fatal(err)
 	}
 	runnerImage = ebiten.NewImageFromImage(img)
+
+	// gui
+	gui := minigui.NewGUI()
+	gui.AddSliderFloat64("Gravity X", gravity.X, -1000, 1000, func(v float64) {
+		game.gx = v
+		gravity := cp.Vector{X: v, Y: game.gy}
+		space.SetGravity(gravity)
+	})
+	gui.AddSliderFloat64("Gravity Y", gravity.X, -1000, 1000, func(v float64) {
+		game.gy = v
+		gravity := cp.Vector{X: game.gx, Y: v}
+		space.SetGravity(gravity)
+	})
+	game.gui = gui
 
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Ebitengine + Chipmunk")
