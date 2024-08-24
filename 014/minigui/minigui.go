@@ -138,7 +138,8 @@ func drawLine(screen *ebiten.Image, whiteImage *ebiten.Image, x1, y1, x2, y2, wi
 	}
 	op := &ebiten.DrawTrianglesOptions{}
 	op.FillRule = ebiten.FillRuleFillAll
-	op.AntiAlias = true
+	// AntiAlias is not used to reduce the number of draw-triangles issued.
+	// op.AntiAlias = true
 	screen.DrawTriangles(vs, is, whiteImage, op)
 }
 func drawRect(screen *ebiten.Image, whiteImage *ebiten.Image, x, y, width, height float32, c color.NRGBA) {
@@ -162,7 +163,8 @@ func drawFill(screen *ebiten.Image, whiteImage *ebiten.Image, path vector.Path, 
 	}
 	op := &ebiten.DrawTrianglesOptions{}
 	op.FillRule = ebiten.FillRuleFillAll
-	op.AntiAlias = true
+	// AntiAlias is not used to reduce the number of draw-triangles issued.
+	// op.AntiAlias = true
 	screen.DrawTriangles(vs, is, whiteImage, op)
 }
 
@@ -176,12 +178,6 @@ func drawText(image *ebiten.Image, str string, x, y, fontSize float32, c color.N
 		Source: textFaceSource,
 		Size:   float64(fontSize),
 	}
-
-	// Cache glyphs
-	// キャッシュしたい文字列を指定する
-	// フォントサイズを変更した際、キャッシュを作成するようでフレームレートが低下するので注意
-	text.CacheGlyphs("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,-+*#", fontFace)
-
 	text.Draw(
 		image,
 		str,
