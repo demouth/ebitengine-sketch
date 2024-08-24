@@ -2,160 +2,121 @@ package minigui
 
 import (
 	"bytes"
-	"fmt"
 	"image/color"
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"golang.org/x/image/font/gofont/goregular"
 )
 
 var (
 	textFaceSource *text.GoTextFaceSource
 )
 
-type GUI struct {
-	components []Component
-	whiteImage *ebiten.Image
+type HorizontalAlign int
 
-	x               float32
-	y               float32
-	width           float32
-	componentHeight float32
-}
+const (
+	HorizontalAlignLeft HorizontalAlign = iota
+	HorizontalAlignRight
+)
 
-type Component interface {
-	IsComponent()
-}
-type sliderFloat64 struct {
-	label    string
-	value    float64
-	min      float64
-	max      float64
-	hovered  bool
-	callback func(v float64)
-}
-
-func (s *sliderFloat64) IsComponent() {}
-
-func NewGUI() *GUI {
-	s, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.PressStart2P_ttf))
+func init() {
+	s, err := text.NewGoTextFaceSource(bytes.NewReader(goregular.TTF))
 	if err != nil {
 		log.Fatal(err)
 	}
 	textFaceSource = s
 
+}
+
+type GUI struct {
+	components []Component
+	whiteImage *ebiten.Image
+
+	X               float32
+	Y               float32
+	Width           float32
+	ComponentHeight float32
+	Scale           float32
+
+	HorizontalAlign HorizontalAlign
+}
+
+type Component interface {
+	Label() string
+	Update(x, y, width, height, scale float32)
+	Draw(image *ebiten.Image, whiteImage *ebiten.Image, top, left, width, height, scale float32)
+}
+
+func NewGUI() *GUI {
+
 	whiteImage := ebiten.NewImage(3, 3)
 	whiteImage.Fill(color.White)
 	gui := &GUI{
 		whiteImage:      whiteImage,
-		width:           200,
-		componentHeight: 14,
-		x:               190,
-		y:               10,
+		Width:           200,
+		ComponentHeight: 24,
+		X:               0,
+		Y:               0,
+		Scale:           1,
+		HorizontalAlign: HorizontalAlignLeft,
 	}
 	return gui
 }
-
 func (g *GUI) Update() {
 	cx, cy := ebiten.CursorPosition()
-	x := g.x
-	y := g.y
+	x := g.X
+	y := g.Y
+	if g.HorizontalAlign == HorizontalAlignRight {
+		x = g.X - g.Width*g.Scale
+	}
 	for _, c := range g.components {
 		switch c.(type) {
 		case *sliderFloat64:
 			s := c.(*sliderFloat64)
-			s.Update(float32(cx)-x, float32(cy)-y, g.width, g.componentHeight)
+			s.Update(float32(cx)-x, float32(cy)-y, g.Width, g.ComponentHeight, g.Scale)
+		case *sliderFloat32:
+			s := c.(*sliderFloat32)
+			s.Update(float32(cx)-x, float32(cy)-y, g.Width, g.ComponentHeight, g.Scale)
+		case *sliderInt:
+			s := c.(*sliderInt)
+			s.Update(float32(cx)-x, float32(cy)-y, g.Width, g.ComponentHeight, g.Scale)
+		case *button:
+			s := c.(*button)
+			s.Update(float32(cx)-x, float32(cy)-y, g.Width, g.ComponentHeight, g.Scale)
 		}
-		y += g.componentHeight
+		y += g.ComponentHeight * g.Scale
 	}
 }
 func (g *GUI) Draw(image *ebiten.Image) {
-	x := g.x
-	y := g.y
-	for _, c := range g.components {
-		drawRect(image, g.whiteImage, x, y, g.width, g.componentHeight, color.NRGBA{0x31, 0x31, 0x31, 0xff})
-		switch c.(type) {
-		case *sliderFloat64:
-			s := c.(*sliderFloat64)
-			s.Draw(image, g.whiteImage, x, y, g.width, g.componentHeight)
-		}
-		y += g.componentHeight
+	var x, y float32
+
+	// Drawing shapes
+	x = g.X
+	y = g.Y
+	if g.HorizontalAlign == HorizontalAlignRight {
+		x = g.X - g.Width*g.Scale
 	}
-}
-
-func (g *GUI) AddSliderFloat64(label string, value float64, min, max float64, callback func(v float64)) {
-	s := &sliderFloat64{
-		label:    label,
-		value:    value,
-		min:      min,
-		max:      max,
-		callback: callback,
-	}
-	g.components = append(g.components, s)
-}
-
-func (s *sliderFloat64) Update(x, y, width, height float32) {
-	clicked := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
-	if x > width/2 && x < width && y > 0 && y < height {
-		s.hovered = true
-	} else {
-		s.hovered = false
-	}
-
-	if s.hovered && clicked {
-		ratio := float64((x - width/2) / width * 2)
-		valueRange := s.max - s.min
-		s.value = s.min + valueRange*ratio
-		s.callback(s.value)
-	}
-}
-func (s *sliderFloat64) Draw(image *ebiten.Image, whiteImage *ebiten.Image, top, left, width, height float32) {
-	padding := float32(1)
-	x := top + width/2 + padding
-	y := left + padding
-	w := width/2 - padding*2
-	h := height - padding*2
-	c := color.NRGBA{0x66, 0x66, 0x66, 0xff}
-	if s.hovered {
-		c = color.NRGBA{0x79, 0x79, 0x79, 0xff}
-	}
-	drawRect(image, whiteImage, x, y, w, h, c)
-
-	valueRange := float32(s.max - s.min)
-	drawRange := w
-	ratio := float32(s.value-s.min) / valueRange
-	drawWidth := drawRange * ratio
-
-	drawLine(image, whiteImage, x+drawWidth, y, x+drawWidth, y+h, 1, color.NRGBA{0x2c, 0xc9, 0xff, 0xff})
-
-	paddingTop := float32(3)
-	paddingLeft := float32(3)
-
-	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(top+paddingTop), float64(left+paddingLeft))
-	op.ColorScale.ScaleWithColor(color.NRGBA{R: 0xeb, G: 0xeb, B: 0xeb, A: 0xff})
-	op.LineSpacing = 0
-	op.PrimaryAlign = text.AlignStart
-	text.Draw(image, s.label, &text.GoTextFace{
-		Source: textFaceSource,
-		Size:   8,
-	}, op)
-
-	op = &text.DrawOptions{}
-	op.GeoM.Translate(float64(x+paddingTop), float64(left+paddingLeft))
-	op.ColorScale.ScaleWithColor(color.NRGBA{R: 0xeb, G: 0xeb, B: 0xeb, A: 0xff})
-	op.LineSpacing = 0
-	op.PrimaryAlign = text.AlignStart
-	text.Draw(
+	drawRect(
 		image,
-		fmt.Sprintf("%.3f", s.value),
-		&text.GoTextFace{
-			Source: textFaceSource,
-			Size:   8,
-		}, op)
+		g.whiteImage,
+		x, y,
+		g.Width*g.Scale,
+		g.ComponentHeight*g.Scale*float32(len(g.components)),
+		color.NRGBA{0x31, 0x31, 0x31, 0xff},
+	)
+	for _, c := range g.components {
+		// Draw label
+		textPadding := 5.0 * g.Scale
+		fontSize := g.ComponentHeight*g.Scale - textPadding*2
+		drawText(image, c.Label(), x+textPadding, y+textPadding, fontSize, color.NRGBA{R: 0xeb, G: 0xeb, B: 0xeb, A: 0xff})
+
+		// Draw component
+		c.Draw(image, g.whiteImage, x, y, g.Width, g.ComponentHeight, g.Scale)
+		y += g.ComponentHeight * g.Scale
+	}
 }
 
 func drawLine(screen *ebiten.Image, whiteImage *ebiten.Image, x1, y1, x2, y2, width float32, c color.NRGBA) {
@@ -165,7 +126,7 @@ func drawLine(screen *ebiten.Image, whiteImage *ebiten.Image, x1, y1, x2, y2, wi
 	path.Close()
 	sop := &vector.StrokeOptions{}
 	sop.Width = width
-	sop.LineJoin = vector.LineJoinRound
+	sop.LineJoin = vector.LineJoinMiter
 	vs, is := path.AppendVerticesAndIndicesForStroke(nil, nil, sop)
 	for i := range vs {
 		vs[i].SrcX = 1
@@ -177,9 +138,9 @@ func drawLine(screen *ebiten.Image, whiteImage *ebiten.Image, x1, y1, x2, y2, wi
 	}
 	op := &ebiten.DrawTrianglesOptions{}
 	op.FillRule = ebiten.FillRuleFillAll
+	op.AntiAlias = true
 	screen.DrawTriangles(vs, is, whiteImage, op)
 }
-
 func drawRect(screen *ebiten.Image, whiteImage *ebiten.Image, x, y, width, height float32, c color.NRGBA) {
 	path := vector.Path{}
 	path.MoveTo(x, y)
@@ -201,5 +162,30 @@ func drawFill(screen *ebiten.Image, whiteImage *ebiten.Image, path vector.Path, 
 	}
 	op := &ebiten.DrawTrianglesOptions{}
 	op.FillRule = ebiten.FillRuleFillAll
+	op.AntiAlias = true
 	screen.DrawTriangles(vs, is, whiteImage, op)
+}
+
+func drawText(image *ebiten.Image, str string, x, y, fontSize float32, c color.NRGBA) {
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(float64(x), float64(y))
+	op.ColorScale.ScaleWithColor(c)
+	op.LineSpacing = 0
+	op.PrimaryAlign = text.AlignStart
+	fontFace := &text.GoTextFace{
+		Source: textFaceSource,
+		Size:   float64(fontSize),
+	}
+
+	// Cache glyphs
+	// キャッシュしたい文字列を指定する
+	// フォントサイズを変更した際、キャッシュを作成するようでフレームレートが低下するので注意
+	text.CacheGlyphs("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,-+*#", fontFace)
+
+	text.Draw(
+		image,
+		str,
+		fontFace,
+		op,
+	)
 }
