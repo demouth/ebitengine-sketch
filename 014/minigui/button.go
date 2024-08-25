@@ -31,7 +31,7 @@ func (s *button) Update(x, y, width, height, scale float32) {
 	paddingTop := 4.0 * scale
 	buttonSize := height*scale - paddingTop*2
 	clicked := inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
-	if x >= width/2+paddingLeft && x <= width/2+paddingLeft+buttonSize && y > paddingTop && y <= paddingTop+buttonSize {
+	if x >= width/2*scale+paddingLeft && x <= width/2*scale+paddingLeft+buttonSize && y > paddingTop && y <= paddingTop+buttonSize {
 		s.hovered = true
 	} else {
 		s.hovered = false
@@ -47,7 +47,7 @@ func (s *button) Draw(image *ebiten.Image, whiteImage *ebiten.Image, left, top, 
 	paddingTop := 3.0 * scale
 	buttonSize := height*scale - paddingTop*2
 
-	x := left + width/2 + paddingLeft
+	x := left + width/2*scale + paddingLeft
 	y := top + paddingTop
 	w := buttonSize
 	h := buttonSize

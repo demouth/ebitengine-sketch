@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/rand/v2"
 
+	"github.com/demouth/ebitencp"
 	"github.com/demouth/ebitengine-sketch/014/minigui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -40,6 +41,8 @@ type Game struct {
 	elapsedTime float64
 	genTime     float64
 	numGen      int
+	debugMode   bool
+	debugDrawer *ebitencp.Drawer
 
 	space *cp.Space
 
@@ -94,36 +97,46 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.NRGBA{0x66, 0x66, 0x66, 0xff})
-	g.space.StaticBody.EachShape(func(shape *cp.Shape) {
-		switch shape.Class.(type) {
-		case *cp.Segment:
-			seg := shape.Class.(*cp.Segment)
-			path := vector.Path{}
-			path.MoveTo(float32(hwidth+seg.A().X), float32(hheight+seg.A().Y))
-			path.LineTo(float32(hwidth+seg.B().X), float32(hheight+seg.B().Y))
-			g.drawLine(screen, path, color.NRGBA{0xff, 0xff, 0xff, 0xff}, 5)
-		}
-	})
-
 	numCircle := 0
-	g.space.EachShape(func(shape *cp.Shape) {
-		switch shape.Class.(type) {
-		case *cp.Circle:
-			numCircle++
-			circle := shape.Class.(*cp.Circle)
-			vec := circle.TransformC()
 
-			op := &ebiten.DrawImageOptions{}
-			op.GeoM.Translate(-float64(frameWidth)/2, -float64(frameHeight)/2)
-			op.GeoM.Rotate(circle.Body().Angle())
-			op.GeoM.Scale(circle.Radius()/10, circle.Radius()/10)
-			op.GeoM.Translate(screenWidth/2, screenHeight/2)
-			op.GeoM.Translate(vec.X, vec.Y)
-			i := int(g.elapsedTime*10.0) % frameCount
-			sx, sy := frameOX+i*frameWidth, frameOY
-			screen.DrawImage(runnerImage.SubImage(image.Rect(sx, sy, sx+frameWidth, sy+frameHeight)).(*ebiten.Image), op)
-		}
-	})
+	if g.debugMode {
+		g.space.EachShape(func(shape *cp.Shape) {
+			switch shape.Class.(type) {
+			case *cp.Circle:
+				numCircle++
+			}
+		})
+		cp.DrawSpace(g.space, g.debugDrawer.WithScreen(screen))
+	} else {
+		g.space.StaticBody.EachShape(func(shape *cp.Shape) {
+			switch shape.Class.(type) {
+			case *cp.Segment:
+				seg := shape.Class.(*cp.Segment)
+				path := vector.Path{}
+				path.MoveTo(float32(hwidth+seg.A().X), float32(hheight+seg.A().Y))
+				path.LineTo(float32(hwidth+seg.B().X), float32(hheight+seg.B().Y))
+				g.drawLine(screen, path, color.NRGBA{0xff, 0xff, 0xff, 0xff}, 5)
+			}
+		})
+		g.space.EachShape(func(shape *cp.Shape) {
+			switch shape.Class.(type) {
+			case *cp.Circle:
+				numCircle++
+				circle := shape.Class.(*cp.Circle)
+				vec := circle.TransformC()
+
+				op := &ebiten.DrawImageOptions{}
+				op.GeoM.Translate(-float64(frameWidth)/2, -float64(frameHeight)/2)
+				op.GeoM.Rotate(circle.Body().Angle())
+				op.GeoM.Scale(circle.Radius()/10, circle.Radius()/10)
+				op.GeoM.Translate(screenWidth/2, screenHeight/2)
+				op.GeoM.Translate(vec.X, vec.Y)
+				i := int(g.elapsedTime*10.0) % frameCount
+				sx, sy := frameOX+i*frameWidth, frameOY
+				screen.DrawImage(runnerImage.SubImage(image.Rect(sx, sy, sx+frameWidth, sy+frameHeight)).(*ebiten.Image), op)
+			}
+		})
+	}
 
 	g.gui.Draw(screen)
 	g.gui2.Draw(screen)
@@ -148,6 +161,8 @@ func main() {
 	game.gy = 100
 	game.elasticity = 0.9
 	game.numGen = 2
+	game.debugDrawer = ebitencp.NewDrawer(screenWidth, screenHeight)
+	game.debugDrawer.FlipYAxis = true
 
 	space := cp.NewSpace()
 	gravity := cp.Vector{X: game.gx, Y: game.gy}
@@ -190,6 +205,9 @@ func main() {
 	})
 	gui.AddSliderInt("NumGen", game.numGen, 1, 10, func(v int) {
 		game.numGen = v
+	})
+	gui.AddButton("Debug mode", game.debugMode, func(v bool) {
+		game.debugMode = v
 	})
 	game.gui = gui
 
