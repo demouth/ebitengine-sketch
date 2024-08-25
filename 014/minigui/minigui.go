@@ -35,6 +35,8 @@ type GUI struct {
 	components []Component
 	whiteImage *ebiten.Image
 
+	title string
+
 	X               float32
 	Y               float32
 	Width           float32
@@ -56,6 +58,7 @@ func NewGUI() *GUI {
 	whiteImage.Fill(color.White)
 	gui := &GUI{
 		whiteImage:      whiteImage,
+		title:           "Controls",
 		Width:           200,
 		ComponentHeight: 24,
 		X:               0,
@@ -72,6 +75,7 @@ func (g *GUI) Update() {
 	if g.HorizontalAlign == HorizontalAlignRight {
 		x = g.X - g.Width*g.Scale
 	}
+	y += g.ComponentHeight * g.Scale
 	for _, c := range g.components {
 		switch c.(type) {
 		case *sliderFloat64:
@@ -93,20 +97,37 @@ func (g *GUI) Update() {
 func (g *GUI) Draw(image *ebiten.Image) {
 	var x, y float32
 
-	// Drawing shapes
 	x = g.X
 	y = g.Y
 	if g.HorizontalAlign == HorizontalAlignRight {
 		x = g.X - g.Width*g.Scale
 	}
+
+	// Draw background
 	drawRect(
 		image,
 		g.whiteImage,
 		x, y,
 		g.Width*g.Scale,
-		g.ComponentHeight*g.Scale*float32(len(g.components)),
+		g.ComponentHeight*g.Scale*float32(len(g.components)+1),
 		color.NRGBA{0x31, 0x31, 0x31, 0xff},
 	)
+
+	// Draw title
+	drawRect(
+		image,
+		g.whiteImage,
+		x, y,
+		g.Width*g.Scale,
+		g.ComponentHeight*g.Scale,
+		color.NRGBA{0x17, 0x17, 0x17, 0xff},
+	)
+	textPadding := 5.0 * g.Scale
+	fontSize := g.ComponentHeight*g.Scale - textPadding*2
+	drawText(image, g.title, x+textPadding, y+textPadding, fontSize, color.NRGBA{R: 0xeb, G: 0xeb, B: 0xeb, A: 0xff})
+
+	// Draw components
+	y += g.ComponentHeight * g.Scale
 	for _, c := range g.components {
 		// Draw label
 		textPadding := 5.0 * g.Scale
@@ -117,6 +138,9 @@ func (g *GUI) Draw(image *ebiten.Image) {
 		c.Draw(image, g.whiteImage, x, y, g.Width, g.ComponentHeight, g.Scale)
 		y += g.ComponentHeight * g.Scale
 	}
+}
+func (g *GUI) SetTitle(t string) {
+	g.title = t
 }
 
 func drawLine(screen *ebiten.Image, whiteImage *ebiten.Image, x1, y1, x2, y2, width float32, c color.NRGBA) {
