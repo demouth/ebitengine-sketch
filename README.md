@@ -14,3 +14,4 @@
 - [013](https://demouth.github.io/ebitengine-sketch/013/) Chipmunk Physics 6 - collision detection
 - [014](https://demouth.github.io/ebitengine-sketch/014/) lil-gui
 - [015](https://demouth.github.io/ebitengine-sketch/015/) soft body
+- [016](https://demouth.github.io/ebitengine-sketch/016/) Cache drawing results
