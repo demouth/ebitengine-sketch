@@ -27,8 +27,8 @@ type Game struct {
 	cache           *Cache
 	useCache        bool
 	showSprite      bool
-	numParticles    float32
-	maxNumParticles float32
+	numParticles    float64
+	maxNumParticles float64
 	ctx             *microui.Context
 
 	gy float32
@@ -41,39 +41,35 @@ type Game struct {
 func (g *Game) Update() error {
 	g.count++
 
-	g.ctx.Begin()
-	if g.ctx.BeginWindow("ebitengine/microui", image.Rect(20, 20, 200, 200)) {
-		win := g.ctx.GetCurrentContainer()
-		win.Rect.Max.X = win.Rect.Min.X + max(win.Rect.Dx(), 100)
-		win.Rect.Max.Y = win.Rect.Min.Y + max(win.Rect.Dy(), 100)
-		if g.ctx.HeaderEx("Ebitengine Info", microui.OptExpanded) != 0 {
-			g.ctx.LayoutRow(2, []int{84, -1}, 0)
-			g.ctx.Label("ActualFPS:")
-			g.ctx.Label(fmt.Sprintf("%.1f", ebiten.ActualFPS()))
-		}
-		if g.ctx.HeaderEx("Cache", microui.OptExpanded) != 0 {
-			g.ctx.Checkbox("Show Sprite", &g.showSprite)
-			calcMax := func(useCache bool) float32 {
-				if useCache {
-					return 20000
+	g.ctx.Update(func() {
+		g.ctx.Window("ebitengine/microui", image.Rect(20, 20, 200, 200), func(res microui.Res) {
+			win := g.ctx.CurrentContainer()
+			win.Rect.Max.X = win.Rect.Min.X + max(win.Rect.Dx(), 100)
+			win.Rect.Max.Y = win.Rect.Min.Y + max(win.Rect.Dy(), 100)
+			if g.ctx.HeaderEx("Ebitengine Info", microui.OptExpanded) != 0 {
+				g.ctx.LayoutRow(2, []int{84, -1}, 0)
+				g.ctx.Label("ActualFPS:")
+				g.ctx.Label(fmt.Sprintf("%.1f", ebiten.ActualFPS()))
+			}
+			if g.ctx.HeaderEx("Cache", microui.OptExpanded) != 0 {
+				g.ctx.Checkbox("Show Sprite", &g.showSprite)
+				calcMax := func(useCache bool) float64 {
+					if useCache {
+						return 20000
+					}
+					return 1000
 				}
-				return 1000
+				if g.ctx.Checkbox("Use Cache", &g.useCache) > 0 {
+					g.particles = initParticles(int(g.numParticles))
+				}
+				g.ctx.LayoutRow(2, []int{46, -1}, 0)
+				g.ctx.Label("Num:")
+				if g.ctx.SliderEx(&g.numParticles, 100, calcMax(g.useCache), 100, "%.0f", microui.OptAlignCenter) > 0 {
+					g.particles = initParticles(int(g.numParticles))
+				}
 			}
-			if g.ctx.Checkbox("Use Cache", &g.useCache) > 0 {
-				g.particles = initParticles(int(g.numParticles))
-			}
-			g.ctx.LayoutBeginColumn()
-			g.ctx.LayoutRow(2, []int{46, -1}, 0)
-			g.ctx.Label("Num:")
-			if g.ctx.SliderEx(&g.numParticles, 100, calcMax(g.useCache), 100, "%.0f", microui.OptAlignCenter) > 0 {
-				g.particles = initParticles(int(g.numParticles))
-			}
-			g.ctx.LayoutEndColumn()
-		}
-		g.ctx.EndWindow()
-	}
-	g.ctx.End()
-
+		})
+	})
 	return nil
 }
 
