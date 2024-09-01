@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	screenWidth  = 1200
-	screenHeight = 1200
+	screenWidth  = 600
+	screenHeight = 600
 )
 
 type Game struct {
@@ -42,9 +42,9 @@ func (g *Game) Update() error {
 	g.count++
 
 	g.ctx.Begin()
-	if g.ctx.BeginWindow("ebitengine/microui", image.Rect(20, 20, 300, 240)) {
+	if g.ctx.BeginWindow("ebitengine/microui", image.Rect(20, 20, 200, 200)) {
 		win := g.ctx.GetCurrentContainer()
-		win.Rect.Max.X = win.Rect.Min.X + max(win.Rect.Dx(), 240)
+		win.Rect.Max.X = win.Rect.Min.X + max(win.Rect.Dx(), 100)
 		win.Rect.Max.Y = win.Rect.Min.Y + max(win.Rect.Dy(), 100)
 		if g.ctx.HeaderEx("Ebitengine Info", microui.OptExpanded) != 0 {
 			g.ctx.LayoutRow(2, []int{84, -1}, 0)
@@ -109,7 +109,7 @@ func main() {
 	game.shapeWidth = 30
 	game.shapeHeight = 30
 	game.shapeLineWidth = 1
-	game.numParticles = 10000
+	game.numParticles = 1000
 	game.maxNumParticles = 20000
 	game.useCache = true
 	game.cache = newCache(game.shapeWidth, game.shapeHeight, game.shapeLineWidth, game.colors)
