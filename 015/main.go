@@ -83,9 +83,29 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				p.SetPosition(p.Position())
 			}
 			path.Close()
-			g.drawFill(screen, path, color.NRGBA{0x00, 0x00, 0x00, 0xff})
+			g.drawFill(screen, path, sb.color)
 			partRadius := partRadius(sb.restLength, sb.numParts)
-			g.drawLine(screen, path, color.NRGBA{0x00, 0x00, 0x00, 0xff}, float32(partRadius*2))
+			g.drawLine(screen, path, sb.color, float32(partRadius*2))
+
+			{
+				// eyes
+				p := sb.center.Position()
+				v := sb.center.Velocity()
+				rad := math.Atan2(v.Y, v.X)
+				eyeR := float32(8)
+				eyeD := float32(7)
+				eyeX := float32(math.Cos(rad)) * 5
+				eyeY := float32(math.Sin(rad)) * 5
+				eyeX += float32(p.X)
+				eyeY += float32(p.Y)
+				corneaR := float32(4)
+				corneaX := float32(math.Cos(rad)) * eyeR * 0.5
+				corneaY := float32(math.Sin(rad)) * eyeR * 0.5
+				g.drawCircle(screen, screenWidth/2-eyeD+eyeX, screenHeight/2+eyeY, eyeR, color.NRGBA{0xff, 0xff, 0xff, 0xff})
+				g.drawCircle(screen, screenWidth/2+eyeD+eyeX, screenHeight/2+eyeY, eyeR, color.NRGBA{0xff, 0xff, 0xff, 0xff})
+				g.drawCircle(screen, screenWidth/2-eyeD+eyeX+corneaX, screenHeight/2+eyeY+corneaY, corneaR, sb.color)
+				g.drawCircle(screen, screenWidth/2+eyeD+eyeX+corneaX, screenHeight/2+eyeY+corneaY, corneaR, sb.color)
+			}
 		}
 	}
 
@@ -110,8 +130,8 @@ func main() {
 	game.debugDrawer.FlipYAxis = true
 	game.debugMode = false
 	game.RestLength = 50
-	game.Stiffness = 400
-	game.Damping = 22
+	game.Stiffness = 600
+	game.Damping = 32
 	game.ctx = microui.NewContext()
 
 	space := cp.NewSpace()
@@ -119,10 +139,9 @@ func main() {
 	gravity := cp.Vector{X: float64(game.gx), Y: float64(game.gy)}
 	space.SetGravity(gravity)
 	game.space = space
-	softbodies = append(softbodies, addSoftbodyCircle(space, float64(game.RestLength), -150, -100, 0.1))
 
 	addWall(space, -screenWidth/2, screenHeight/2, screenWidth/2, screenHeight/2, 1, 0.9)
-	addWall(space, -screenWidth/2, -screenHeight/2, screenWidth/2, -screenHeight/2, 1, 0.9)
+	// addWall(space, -screenWidth/2, -screenHeight/2, screenWidth/2, -screenHeight/2, 1, 0.9)
 	addWall(space, -screenWidth/2, -screenHeight/2, -screenWidth/2, screenHeight/2, 1, 0.9)
 	addWall(space, screenWidth/2, -screenHeight/2, screenWidth/2, screenHeight/2, 1, 0.9)
 
@@ -173,6 +192,7 @@ func (g *Game) drawLine(screen *ebiten.Image, path vector.Path, c color.NRGBA, w
 	}
 	op := &ebiten.DrawTrianglesOptions{}
 	op.FillRule = ebiten.FillRuleFillAll
+	op.AntiAlias = true
 	screen.DrawTriangles(vs, is, whiteSubImage, op)
 }
 func (g *Game) drawFill(screen *ebiten.Image, path vector.Path, c color.NRGBA) {
@@ -187,7 +207,13 @@ func (g *Game) drawFill(screen *ebiten.Image, path vector.Path, c color.NRGBA) {
 	}
 	op := &ebiten.DrawTrianglesOptions{}
 	op.FillRule = ebiten.FillRuleFillAll
+	op.AntiAlias = true
 	screen.DrawTriangles(vs, is, whiteSubImage, op)
+}
+func (g *Game) drawCircle(screen *ebiten.Image, x, y, radius float32, c color.NRGBA) {
+	path := vector.Path{}
+	path.Arc(x, y, radius, 0, 2*math.Pi, vector.Clockwise)
+	g.drawFill(screen, path, c)
 }
 func (g *Game) ProcessFrame() {
 	g.ctx.Begin()
@@ -196,7 +222,7 @@ func (g *Game) ProcessFrame() {
 
 	g.count++
 	if g.count%80 == 0 {
-		softbodies = append(softbodies, addSoftbodyCircle(g.space, float64(g.RestLength), rand.Float64()*200.0-100.0, -200, 0.1))
+		softbodies = append(softbodies, addSoftbodyCircle(g.space, float64(g.RestLength), rand.Float64()*200.0-100.0, -400, 0.1))
 	}
 	newSoftbodies := make([]*SoftbodyCircle, 0)
 	for _, sb := range softbodies {
@@ -230,26 +256,20 @@ func (g *Game) ProcessFrame() {
 }
 
 func TestWindow(ctx *microui.Context, g *Game) {
-	if ctx.BeginWindow("ebitengine/microui", image.Rect(20, 20, 300, 240)) {
+	if ctx.BeginWindowEx("ebitengine/microui", image.Rect(20, 20, 300, 240), microui.OptClosed) != 0 {
 		defer ctx.EndWindow()
 		win := ctx.GetCurrentContainer()
 		win.Rect.Max.X = win.Rect.Min.X + max(win.Rect.Dx(), 240)
 		win.Rect.Max.Y = win.Rect.Min.Y + max(win.Rect.Dy(), 100)
 
 		if ctx.HeaderEx("Space", microui.OptExpanded) != 0 {
-			/* sliders */
 			ctx.LayoutBeginColumn()
 			ctx.LayoutRow(2, []int{100, -1}, 0)
 			ctx.Label("Gravity:")
 			ctx.Slider(&g.gy, 200, 400)
 			ctx.LayoutEndColumn()
-
-			// gui.AddButton("Debug", game.debugMode, func(v bool) {
-			// 	game.debugMode = v
-			// })
 		}
 		if ctx.HeaderEx("Soft Body", microui.OptExpanded) != 0 {
-			/* sliders */
 			ctx.LayoutBeginColumn()
 			ctx.LayoutRow(2, []int{100, -1}, 0)
 			ctx.Label("RestLength:")
@@ -297,6 +317,7 @@ type SoftbodyCircle struct {
 	restLength float64
 	parts      []*cp.Body
 	center     *cp.Body
+	color      color.NRGBA
 
 	random float64
 
@@ -325,7 +346,7 @@ func (sc *SoftbodyCircle) remove(space *cp.Space) {
 	}
 }
 func partRadius(restLength float64, numParts int) float64 {
-	return math.Pi * restLength * 2.0 / float64(numParts+1)
+	return math.Pi * restLength * 2.0 / float64(numParts+1) * 0.8
 }
 func (sc *SoftbodyCircle) setParams(restLength, stiffness, damping float64) {
 	restLength *= sc.random
@@ -341,7 +362,7 @@ func (sc *SoftbodyCircle) setParams(restLength, stiffness, damping float64) {
 			}
 		}
 	})
-	partRadius := math.Pi * restLength * 2.0 / float64(sc.numParts+1)
+	partRadius := partRadius(restLength, 32)
 	for _, p := range sc.parts {
 		p.EachConstraint(func(c *cp.Constraint) {
 			switch c.Class.(type) {
@@ -395,13 +416,49 @@ func newSoftbodyCircle(space *cp.Space, restLength float64, x, y, elasticity flo
 	}
 
 	sc := &SoftbodyCircle{
-		lifespan:   800,
+		lifespan:   1900,
 		age:        0,
 		numParts:   numParts,
 		restLength: restLength,
 		parts:      parts,
 		center:     center,
-		random:     rand.Float64()*0.4 + 0.6,
+		random:     rand.Float64()*0.8 + 0.6,
+		color:      colors.Random(),
 	}
 	return sc
+}
+
+///////////////////// colors //////////////////////
+
+var (
+	colors = NewColors()
+)
+
+type Colors struct {
+	colors []color.NRGBA
+}
+
+func NewColors() *Colors {
+	// https://openprocessing.org/sketch/1845890
+	colors := []color.NRGBA{
+		{0xDE, 0x18, 0x3C, 0xFF},
+		{0xF2, 0xB5, 0x41, 0xFF},
+		{0x0C, 0x79, 0xBB, 0xFF},
+		{0x2D, 0xAC, 0xB2, 0xFF},
+		{0xE4, 0x64, 0x24, 0xFF},
+		{0xEC, 0xAC, 0xBE, 0xFF},
+		{0x00, 0x00, 0x00, 0xFF},
+		{0x19, 0x44, 0x6B, 0xFF},
+	}
+	return &Colors{colors: colors}
+}
+func (c *Colors) Random() color.NRGBA {
+	i := rand.Intn(len(c.colors))
+	return c.colors[i]
+}
+func (c *Colors) Color(colorNo uint8) color.NRGBA {
+	return c.colors[colorNo%uint8(len(c.colors))]
+}
+func (c *Colors) Len() int {
+	return len(c.colors)
 }
