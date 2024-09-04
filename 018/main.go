@@ -358,7 +358,7 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 		s, err := ebiten.NewShader([]byte(g.textFields[0].field.Text()))
 		if err != nil {
 			g.shader = nil
-			return err
+			// return err
 		}
 		g.shader = s
 		g.prevText = g.textFields[0].field.Text()
