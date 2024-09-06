@@ -22,12 +22,13 @@ const (
 
 var (
 	step   = 20
-	smooth = float64(4)
+	smooth = float64(3)
 )
 
 type Game struct {
 	present   [][]Dot // [y][x]Dot
 	reference [][]Dot // [y][x]Dot
+	pos       [][]Pos
 	time      int
 	shift     float64
 	seed      int64
@@ -36,9 +37,15 @@ type Game struct {
 type Dot struct {
 	C, R float64
 }
+type Pos struct {
+	X, Y float32
+}
 
 func (g *Game) Update() error {
 	for y, ly := 0, len(g.reference); y < ly; y++ {
+		if len(g.pos) <= y {
+			g.pos = append(g.pos, make([]Pos, len(g.reference[y])))
+		}
 		for x, lx := 0, len(g.reference[y]); x < lx; x++ {
 			if len(g.present) <= y {
 				continue
@@ -48,22 +55,27 @@ func (g *Game) Update() error {
 			}
 			rgba1 := g.reference[y][x]
 			rgba2 := g.present[y][x]
-			g.present[y][x].R += (rgba1.R - rgba2.R) * 0.06
-			g.present[y][x].C += (rgba1.C - rgba2.C) * 0.06
+			g.present[y][x].R += (rgba1.R - rgba2.R) * 0.1
+			g.present[y][x].C += (rgba1.C - rgba2.C) * 0.1
+
+			r := g.present[y][x].R
+			cos := float32(math.Cos(float64(r)*math.Pi)) * 40
+			sin := float32(math.Sin(float64(r)*math.Pi))*40 - 40
+			g.pos[y][x] = Pos{float32(x*step) + cos, float32(y*step) + sin}
 		}
 	}
 
-	if g.time%10 == 0 {
+	if g.time%60 == 0 {
 		g.reference = genDot(screenWidth/step+1, screenHeight/step+1, g.seed, g.shift)
-		g.shift += .05
+		g.shift += .15
 	}
 	g.time++
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	screen.Fill(color.RGBA{0xC7, 0xCC, 0xD9, 0xff}) // #C7CCD9
-	// screen.Fill(color.RGBA{0x19, 0x44, 0x6B, 0xff}) // #19446B
+	// screen.Fill(color.RGBA{0xC7, 0xCC, 0xD9, 0xff}) // #C7CCD9
+	screen.Fill(color.RGBA{0x19, 0x44, 0x6B, 0xff}) // #19446B
 	for y, ly := 0, len(g.reference); y < ly; y++ {
 		for x, lx := 0, len(g.reference[y]); x < lx; x++ {
 			if len(g.present) <= y {
@@ -80,9 +92,19 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				B: uint8(col2.B * float64(0xff)),
 				A: uint8(float64(0xff)),
 			}
-			// r := g.present[y][x].R * float64(step) * 0.8
 			r := g.present[y][x].R
-			drawShape(screen, float32(x*step), float32(y*step), float32(step), float32(step), float32(r), col)
+			if x+1 >= len(g.pos[y]) {
+				continue
+			}
+			if y+1 >= len(g.pos) {
+				continue
+			}
+			current := g.pos[y][x]
+			right := g.pos[y][x+1]
+			bottom := g.pos[y+1][x]
+			bottomRight := g.pos[y+1][x+1]
+
+			drawShape(screen, current, right, bottom, bottomRight, float32(r), col)
 		}
 	}
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("%.2f", ebiten.ActualFPS()))
@@ -222,28 +244,14 @@ func drawLine(screen *ebiten.Image, x1, y1, x2, y2, width float32, c color.NRGBA
 	op := &ebiten.DrawTrianglesOptions{}
 	op.FillRule = ebiten.FillRuleFillAll
 	// AntiAlias is not used to reduce the number of draw-triangles issued.
-	// op.AntiAlias = true
+	op.AntiAlias = true
 	screen.DrawTriangles(vs, is, whiteSubImage, op)
 }
-func drawShape(screen *ebiten.Image, x, y, width, height, r float32, c color.NRGBA) {
-
-	{
-		cos := float32(math.Cos(float64(r)*math.Pi)) * 20
-		sin := float32(math.Sin(float64(r)*math.Pi))*20 - 20
-		drawCircle(screen, x+cos, y+sin, r*20+1, c)
-	}
-
-	// {
-	// 	max := float32(14.0)
-	// 	num := int(math.Floor(float64(r * max)))
-	// 	lineWidth := float32(1)
-	// 	stepX := width / float32(num)
-	// 	stepY := height / float32(num)
-	// 	for i := 0; i < num; i++ {
-	// 		lx := x + stepX*float32(i)
-	// 		ly := y + stepY*float32(i)
-	// 		drawLine(screen, lx, y, lx, y+height, lineWidth, c)
-	// 		drawLine(screen, x, ly, x+width, ly, lineWidth, c)
-	// 	}
-	// }
+func drawShape(screen *ebiten.Image, p0, p1, p2, p3 Pos, r float32, c color.NRGBA) {
+	drawLine(screen, p0.X, p0.Y, p1.X, p1.Y, 1, c)
+	drawLine(screen, p0.X, p0.Y, p2.X, p2.Y, 1, c)
+	drawLine(screen, p1.X, p1.Y, p3.X, p3.Y, 1, c)
+	drawLine(screen, p2.X, p2.Y, p3.X, p3.Y, 1, c)
+	drawLine(screen, p0.X, p0.Y, p3.X, p3.Y, 1, c)
+	drawLine(screen, p1.X, p1.Y, p2.X, p2.Y, 1, c)
 }
