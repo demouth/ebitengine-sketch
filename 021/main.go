@@ -111,10 +111,7 @@ func (g *Game) Update() error {
 		g.shift += .02
 		g.reference = genDot(screenWidth/step+1, screenHeight/step+1, g.seed, g.shift)
 	}
-	return nil
-}
-
-func (g *Game) Draw(screen *ebiten.Image) {
+	// draw to canvas
 	drawRect(
 		g.canvas,
 		0, 0, float32(screenWidth), float32(screenHeight),
@@ -143,6 +140,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		drawLine(g.canvas, p.X, p.Y, p.OldX, p.OldY, lw, col)
 	}
+	return nil
+}
+
+func (g *Game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(g.canvas, nil)
 	ebitenutil.DebugPrint(
 		screen,
