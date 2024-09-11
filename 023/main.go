@@ -36,8 +36,8 @@ type Game struct {
 
 func (g *Game) Update() error {
 	g.count++
-	for i := 0; i < 2; i++ {
-		addCircle(g.space, 5, rand.Float64()*40-20, -screenHeight/2+10)
+	for i := 0; i < 1; i++ {
+		addCircle(g.space, 5, rand.Float64()*40-20, -screenHeight/2)
 	}
 
 	margin := 10.0
@@ -48,8 +48,6 @@ func (g *Game) Update() error {
 		} else if body.Position().X < -screenWidth/2-margin {
 			remove = true
 		} else if body.Position().X > screenWidth/2+margin {
-			remove = true
-		} else if body.Position().Y < -screenHeight/2-margin {
 			remove = true
 		}
 		if remove {
@@ -118,7 +116,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func main() {
 	space := cp.NewSpace()
-	space.SetGravity(cp.Vector{X: 0, Y: 200})
+	space.SetGravity(cp.Vector{X: 0, Y: 400})
 
 	s, err := ebiten.NewShader([]byte(radialblur_kage))
 	if err != nil {
@@ -132,10 +130,7 @@ func main() {
 	game.ecp.FlipYAxis = true
 	game.shader = s
 
-	// addWall(space, -100, 100, -100, -100, 5, 0.9)
-	// addWall(space, +100, 100, +100, -100, 5, 0.9)
-	// addWall(space, -100, 100, +100, 100, 5, 0.9)
-	addWall(space, -150, -120, -50, -80, 5, 0)
+	addWall(space, -150, -120, -20, -80, 5, 0)
 	addWall(space, 150, -40, 0, 0, 5, 0)
 	addWall(space, -150, 200, 0, 200, 5, 0)
 	addWall(space, -150, 100, -150, 200, 5, 0)

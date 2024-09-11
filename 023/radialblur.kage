@@ -19,34 +19,23 @@
 package main
 
 func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
-	// Cursor := vec2(0,0)
-	// pos := dstPos.xy - imageDstOrigin()
-
-	// dir := normalize(pos - Cursor)
 	clr := imageSrc2UnsafeAt(srcPos)
-
-	samples := [...]float{
-		-16, -14, -12, -10, 8, -6, -4, -2, -1, 1, 2, 4, 6, 8, 10, 12, 14, 16,
-	}
+	weightSum := 0.0
 	sum := clr
-	for i := 0; i < len(samples); i++ {
-		sample := vec2(samples[i], 0)
-		sum += imageSrc0At(srcPos + sample)
+	for x := -8; x < 8; x++ {
+		for y := -8; y < 8; y++ {
+			sample := vec2(float(x), float(y))
+			weight := gauss(float(x), float(y), 16)
+			weightSum += weight
+			sum += imageSrc0At(srcPos + sample) * weight
+		}
 	}
-	for i := 0; i < len(samples); i++ {
-		sample := vec2(0, samples[i])
-		sum += imageSrc0At(srcPos + sample)
-	}
-	sum /= 36 + 1
-	// return sum
-	dist := distance(sum, vec4(0, 0, 0, 0))
-	t := clamp(dist/256, 0, 1)
-	if t > 0.0041 {
+	sum *= 1.0 / weightSum
+	if sum.x > 0.34 {
 		return vec4(1, 1, 1, 1)
 	}
 	return vec4(0, 0, 0, 1)
-
-	// dist := distance(pos, Cursor)
-	// t := clamp(dist/256, 0, 1)
-	// return mix(clr, sum, t)
+}
+func gauss(x, y, sigma float) float {
+	return 1.0 / (2.0 * 3.14 * sigma * sigma) * exp(-(x * x + y * y) / (2.0 * sigma * sigma))
 }
