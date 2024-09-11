@@ -1,0 +1,52 @@
+// Copyright 2020 The Ebiten Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+//go:build ignore
+
+//kage:unit pixels
+
+package main
+
+func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
+	// Cursor := vec2(0,0)
+	// pos := dstPos.xy - imageDstOrigin()
+
+	// dir := normalize(pos - Cursor)
+	clr := imageSrc2UnsafeAt(srcPos)
+
+	samples := [...]float{
+		-16, -14, -12, -10, 8, -6, -4, -2, -1, 1, 2, 4, 6, 8, 10, 12, 14, 16,
+	}
+	sum := clr
+	for i := 0; i < len(samples); i++ {
+		sample := vec2(samples[i], 0)
+		sum += imageSrc0At(srcPos + sample)
+	}
+	for i := 0; i < len(samples); i++ {
+		sample := vec2(0, samples[i])
+		sum += imageSrc0At(srcPos + sample)
+	}
+	sum /= 36 + 1
+	// return sum
+	dist := distance(sum, vec4(0, 0, 0, 0))
+	t := clamp(dist/256, 0, 1)
+	if t > 0.0041 {
+		return vec4(1, 1, 1, 1)
+	}
+	return vec4(0, 0, 0, 1)
+
+	// dist := distance(pos, Cursor)
+	// t := clamp(dist/256, 0, 1)
+	// return mix(clr, sum, t)
+}

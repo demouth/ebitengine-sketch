@@ -21,3 +21,4 @@
 - [020](https://demouth.github.io/ebitengine-sketch/020/) perlin noise
 - [021](https://demouth.github.io/ebitengine-sketch/021/) perlin noise 2
 - [022](https://demouth.github.io/ebitengine-sketch/022/) boids
+- [023](https://demouth.github.io/ebitengine-sketch/023/) fluid shaders
