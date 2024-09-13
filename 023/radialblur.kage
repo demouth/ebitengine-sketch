@@ -22,16 +22,17 @@ func Fragment(dstPos vec4, srcPos vec2, color vec4) vec4 {
 	clr := imageSrc2UnsafeAt(srcPos)
 	weightSum := 0.0
 	sum := clr
-	for x := -8; x < 8; x++ {
-		for y := -8; y < 8; y++ {
+	for x := -16; x < 16; x++ {
+		for y := -16; y < 16; y++ {
 			sample := vec2(float(x), float(y))
-			weight := gauss(float(x), float(y), 16)
+			weight := gauss(float(x), float(y), 6)
 			weightSum += weight
 			sum += imageSrc0At(srcPos + sample) * weight
 		}
 	}
 	sum *= 1.0 / weightSum
-	if sum.x > 0.34 {
+	// return sum
+	if sum.x > 0.05 {
 		return vec4(1, 1, 1, 1)
 	}
 	return vec4(0, 0, 0, 1)

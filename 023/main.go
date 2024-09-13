@@ -36,8 +36,8 @@ type Game struct {
 
 func (g *Game) Update() error {
 	g.count++
-	for i := 0; i < 1; i++ {
-		addCircle(g.space, 5, rand.Float64()*40-20, -screenHeight/2)
+	for i := 0; i < 3; i++ {
+		addCircle(g.space, 2.5, rand.Float64()*40-20, -screenHeight/2)
 	}
 
 	margin := 10.0
@@ -132,9 +132,9 @@ func main() {
 
 	addWall(space, -150, -120, -20, -80, 5, 0)
 	addWall(space, 150, -40, 0, 0, 5, 0)
-	addWall(space, -150, 200, 0, 200, 5, 0)
-	addWall(space, -150, 100, -150, 200, 5, 0)
-	addWall(space, 0, 100, 0, 200, 5, 0)
+	addWall(space, -150, 160, -20, 160, 5, 0)
+	addWall(space, -150, 100, -150, 160, 5, 0)
+	addWall(space, -20, 100, -20, 160, 5, 0)
 
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("shader")
