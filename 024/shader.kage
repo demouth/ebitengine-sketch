@@ -1,0 +1,10 @@
+//go:build ignore
+
+//kage:unit pixels
+
+package main
+
+func Fragment (dstPos vec4, srcPos vec2, color vec4) vec4 {
+	clr := imageSrc0At(srcPos)
+	return clr
+}
