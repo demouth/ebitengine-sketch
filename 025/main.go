@@ -7,8 +7,8 @@ import (
 	_ "image/png"
 	"log"
 	"math"
-	"math/rand"
 
+	"github.com/demouth/ebitengine-sketch/025/colorpallet"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
@@ -34,10 +34,11 @@ func init() {
 }
 
 type Game struct {
-	vertices   []ebiten.Vertex
-	indices    []uint16
-	whiteImage *ebiten.Image
-	time       int
+	vertices    []ebiten.Vertex
+	indices     []uint16
+	whiteImage  *ebiten.Image
+	time        int
+	colorpallet *colorpallet.Colors
 }
 
 func (g *Game) Update() error {
@@ -58,9 +59,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	g.vertices, g.indices = path.AppendVerticesAndIndicesForFilling(g.vertices[:0], g.indices[:0])
 
+	count := uint8(0)
 	for i := range g.vertices {
-		g.vertices[i].DstX = g.vertices[i].DstX + float32(math.Sin(float64(float32(g.time)+g.vertices[i].DstX)/10))*4 + rand.Float32()*3
-		g.vertices[i].DstY = g.vertices[i].DstY + float32(math.Cos(float64(float32(g.time)+g.vertices[i].DstY)/14))*4 + rand.Float32()*3 - 30
+		count++
+		count %= uint8(g.colorpallet.Len())
+		c := g.colorpallet.Color(count)
+		g.vertices[i].DstX = g.vertices[i].DstX + float32(math.Sin(float64(float32(g.time)+g.vertices[i].DstX)/10))*4
+		g.vertices[i].DstY = g.vertices[i].DstY + float32(math.Cos(float64(float32(g.time)+g.vertices[i].DstY)/14))*4 - 30
+		g.vertices[i].ColorR = float32(c.R) / 0xff
+		g.vertices[i].ColorG = float32(c.G) / 0xff
+		g.vertices[i].ColorB = float32(c.B) / 0xff
 	}
 
 	{
@@ -82,7 +90,8 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func main() {
 	g := &Game{
-		whiteImage: ebiten.NewImage(3, 3),
+		whiteImage:  ebiten.NewImage(3, 3),
+		colorpallet: colorpallet.NewColors(0),
 	}
 	g.whiteImage.Fill(color.White)
 	ebiten.SetWindowSize(screenWidth, screenHeight)
