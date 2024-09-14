@@ -47,7 +47,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	screen.Fill(color.NRGBA{0x66, 0x66, 0x66, 0xff})
+	screen.Fill(color.NRGBA{0x00, 0x00, 0x00, 0xff})
 
 	path := &vector.Path{}
 	{
@@ -64,8 +64,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		count++
 		count %= uint8(g.colorpallet.Len())
 		c := g.colorpallet.Color(count)
-		g.vertices[i].DstX = g.vertices[i].DstX + float32(math.Sin(float64(float32(g.time)+g.vertices[i].DstX)/10))*4
-		g.vertices[i].DstY = g.vertices[i].DstY + float32(math.Cos(float64(float32(g.time)+g.vertices[i].DstY)/14))*4 - 30
+		g.vertices[i].DstX = g.vertices[i].DstX + float32(math.Sin(float64(float32(g.time)+g.vertices[i].DstX+g.vertices[i].DstY)/8))*6
+		g.vertices[i].DstY = g.vertices[i].DstY + float32(math.Cos(float64(float32(g.time)+g.vertices[i].DstX+g.vertices[i].DstY)/8))*6 - 30
 		g.vertices[i].ColorR = float32(c.R) / 0xff
 		g.vertices[i].ColorG = float32(c.G) / 0xff
 		g.vertices[i].ColorB = float32(c.B) / 0xff
@@ -91,7 +91,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 func main() {
 	g := &Game{
 		whiteImage:  ebiten.NewImage(3, 3),
-		colorpallet: colorpallet.NewColors(0),
+		colorpallet: colorpallet.NewColors(2),
 	}
 	g.whiteImage.Fill(color.White)
 	ebiten.SetWindowSize(screenWidth, screenHeight)
