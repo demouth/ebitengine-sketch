@@ -61,12 +61,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for i := range g.vertices {
 		g.vertices[i].DstX = g.vertices[i].DstX + float32(math.Sin(float64(float32(g.time)+g.vertices[i].DstX)/10))*4 + rand.Float32()*3
 		g.vertices[i].DstY = g.vertices[i].DstY + float32(math.Cos(float64(float32(g.time)+g.vertices[i].DstY)/14))*4 + rand.Float32()*3 - 30
-		g.vertices[i].SrcX = 1
-		g.vertices[i].SrcY = 1
-		g.vertices[i].ColorR = 0xff
-		g.vertices[i].ColorG = 0xff
-		g.vertices[i].ColorB = 0xff
-		g.vertices[i].ColorA = 1
 	}
 
 	{
