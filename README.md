@@ -24,3 +24,4 @@
 - [023](https://demouth.github.io/ebitengine-sketch/023/) fluid shaders
 - [024](https://demouth.github.io/ebitengine-sketch/024/) DrawTrianglesShader 2
 - [025](https://demouth.github.io/ebitengine-sketch/025/) font outline
+- [026](https://demouth.github.io/ebitengine-sketch/026/) Font Rigid Body (circles)
