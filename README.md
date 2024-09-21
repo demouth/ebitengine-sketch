@@ -6,15 +6,15 @@
 - [004](https://demouth.github.io/ebitengine-sketch/004/) ebitengine v2.7.0 exp/textinput.Field
 - [006](https://demouth.github.io/ebitengine-sketch/006/) kage:Shader Art Coding Introduction
 - [007](https://demouth.github.io/ebitengine-sketch/007/) kage:Galaxy of Universes
-- [008](https://demouth.github.io/ebitengine-sketch/008/) Chipmunk Physics
-- [009](https://demouth.github.io/ebitengine-sketch/009/) Chipmunk Physics 2
-- [010](https://demouth.github.io/ebitengine-sketch/010/) Chipmunk Physics 3
-- [011](https://demouth.github.io/ebitengine-sketch/011/) Chipmunk Physics 4
-- [012](https://demouth.github.io/ebitengine-sketch/012/) Chipmunk Physics 5
-- [013](https://demouth.github.io/ebitengine-sketch/013/) Chipmunk Physics 6 - collision detection
+- [008](https://demouth.github.io/ebitengine-sketch/008/) chipmunk physics
+- [009](https://demouth.github.io/ebitengine-sketch/009/) chipmunk physics 2
+- [010](https://demouth.github.io/ebitengine-sketch/010/) chipmunk physics 3
+- [011](https://demouth.github.io/ebitengine-sketch/011/) chipmunk physics 4
+- [012](https://demouth.github.io/ebitengine-sketch/012/) chipmunk physics 5
+- [013](https://demouth.github.io/ebitengine-sketch/013/) chipmunk physics 6 - collision detection
 - [014](https://demouth.github.io/ebitengine-sketch/014/) lil-gui
 - [015](https://demouth.github.io/ebitengine-sketch/015/) soft body
-- [016](https://demouth.github.io/ebitengine-sketch/016/) Cache drawing results
+- [016](https://demouth.github.io/ebitengine-sketch/016/) cache drawing results
 - [017](https://demouth.github.io/ebitengine-sketch/017/) soft body 2
 - [018](https://demouth.github.io/ebitengine-sketch/018/) kage editor
 - [019](https://demouth.github.io/ebitengine-sketch/019/) DrawTrianglesShader
@@ -24,5 +24,6 @@
 - [023](https://demouth.github.io/ebitengine-sketch/023/) fluid shaders
 - [024](https://demouth.github.io/ebitengine-sketch/024/) DrawTrianglesShader 2
 - [025](https://demouth.github.io/ebitengine-sketch/025/) font outline
-- [026](https://demouth.github.io/ebitengine-sketch/026/) Font Rigid Body (circles)
-- [027](https://demouth.github.io/ebitengine-sketch/027/) Font Rigid Body 2 (segments)
+- [026](https://demouth.github.io/ebitengine-sketch/026/) font Rigid Body (circles)
+- [027](https://demouth.github.io/ebitengine-sketch/027/) font Rigid Body 2 (segments)
+- [028](https://demouth.github.io/ebitengine-sketch/028/) metaball
