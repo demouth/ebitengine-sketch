@@ -122,9 +122,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	op = &ebiten.DrawRectShaderOptions{}
 	ff := float32(0xFF)
 	op.Uniforms = map[string]interface{}{
-		"Color1": []float32{0x40 / ff, 0x15 / ff, 0x20 / ff, 1.0}, // #401520
-		"Color2": []float32{0xF2 / ff, 0x83 / ff, 0x22 / ff, 1.0}, // #F28322
-		"Color3": []float32{0xD9 / ff, 0x25 / ff, 0x25 / ff, 1.0}, // #D92525
+		"Color3": []float32{0x40 / ff, 0x15 / ff, 0x20 / ff, 1.0}, // #401520
+		// "Color3": []float32{0xF2 / ff, 0x83 / ff, 0x22 / ff, 1.0}, // #F28322
+		"Color2": []float32{0x4B / ff, 0x93 / ff, 0xBF / ff, 1.0}, // #4B93BF
+		"Color1": []float32{0xD9 / ff, 0x25 / ff, 0x25 / ff, 1.0}, // #D92525
 		"Color4": []float32{0xF2 / ff, 0xEB / ff, 0xD5 / ff, 1.0}, // #F2EBD5
 	}
 	op.Images[0] = g.canvas2
@@ -318,7 +319,6 @@ func (sc *SoftbodyCircle) setParams(restLength, stiffness, damping float64) {
 func newSoftbodyCircle(space *cp.Space, restLength float64, numParts int, x, y, stiffness, damping, elasticity float64) *SoftbodyCircle {
 	angleStep := math.Pi * 2.0 / float64(numParts)
 	partRadius := partRadius(restLength, numParts)
-	fmt.Println(restLength, numParts, partRadius)
 	parts := make([]*cp.Body, numParts)
 	center, _ := addCircle(space, 1, x, y, elasticity)
 
