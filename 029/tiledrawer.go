@@ -13,6 +13,18 @@ import (
 
 func BigTileDrawerFactory() TileDrawer {
 	drawers := []TileDrawer{
+		// OutBack
+		&TileDrawer11{directionType: 0},
+		&TileDrawer11{directionType: 1},
+		// shutter
+		&TileDrawer12{directionType: 0},
+		&TileDrawer12{directionType: 1},
+	}
+	r := rand.Intn(len(drawers))
+	return drawers[r]
+}
+func MiddleTileDrawerFactory() TileDrawer {
+	drawers := []TileDrawer{
 		// circle
 		&TileDrawer1{},
 		&TileDrawer2{},
@@ -27,13 +39,14 @@ func BigTileDrawerFactory() TileDrawer {
 	r := rand.Intn(len(drawers))
 	return drawers[r]
 }
-func TileDrawerFactory(x, y int) TileDrawer {
+func SmallTileDrawerFactory(x, y int) TileDrawer {
 	drawers := []TileDrawer{
 		// rect
 		&TileDrawer5{},
 		&TileDrawer6{},
 		&TileDrawer7{},
 		&TileDrawer8{},
+		// arc
 		&TileDrawer10{x: x, y: y},
 	}
 	r := rand.Intn(len(drawers))
@@ -200,6 +213,92 @@ func (d *TileDrawer10) Draw(screen *ebiten.Image, c color.RGBA, t float32) {
 		path.MoveTo(x, 0)
 		path.Arc(x, 0, x, -math.Pi/2, math.Pi/2+math.Pi/2*(1-t), vector.CounterClockwise)
 		path.Close()
+	}
+	drawer.DrawFill(screen, path, c)
+}
+
+type TileDrawer11 struct {
+	original      *ebiten.Image
+	directionType int
+}
+
+func (d *TileDrawer11) Draw(screen *ebiten.Image, c color.RGBA, t float32) {
+	if d.original == nil {
+		size := screen.Bounds().Size()
+		original := ebiten.NewImage(size.X, size.Y)
+		original.DrawImage(screen, nil)
+		d.original = original
+	}
+
+	// t.drawer.Draw(copyImage, t.color, r)
+
+	screen.DrawImage(d.original, nil)
+
+	path := vector.Path{}
+	size := screen.Bounds().Size()
+	x, y := float32(size.X), float32(size.Y)
+	if t > 1 {
+		t = 1
+	}
+	t = float32(ease.OutBack(float64(t)))
+
+	path.MoveTo(0, 0)
+	path.LineTo(0, y)
+	path.LineTo(x, y)
+	path.LineTo(x, 0)
+	path.Close()
+
+	geoM := ebiten.GeoM{}
+	switch d.directionType {
+	case 0:
+		geoM.Translate(0, float64(y-t*y))
+	case 1:
+		geoM.Translate(float64(x-t*x), 0)
+	}
+	vs, is := path.AppendVerticesAndIndicesForFilling(nil, nil)
+	for i := range vs {
+		dstX, dstY := float64(vs[i].DstX), float64(vs[i].DstY)
+		dstX, dstY = geoM.Apply(dstX, dstY)
+		vs[i].DstX, vs[i].DstY = float32(dstX), float32(dstY)
+		vs[i].ColorR = float32(c.R) / float32(0xff)
+		vs[i].ColorG = float32(c.G) / float32(0xff)
+		vs[i].ColorB = float32(c.B) / float32(0xff)
+		vs[i].ColorA = float32(c.A) / float32(0xff)
+	}
+
+	drawer.DrawTriangles(screen, vs, is)
+}
+
+type TileDrawer12 struct {
+	directionType int
+}
+
+func (d *TileDrawer12) Draw(screen *ebiten.Image, c color.RGBA, t float32) {
+	size := screen.Bounds().Size()
+	x, y := float32(size.X), float32(size.Y)
+	t = easing(t)
+	path := vector.Path{}
+	num := 4
+	var step float32
+	if d.directionType == 0 {
+		step = y / float32(num)
+	} else {
+		step = x / float32(num)
+	}
+	for i := 0; i < num; i++ {
+		if d.directionType == 0 {
+			path.MoveTo(0, step*float32(i))
+			path.LineTo(0, step*float32(i)+step*t)
+			path.LineTo(x, step*float32(i)+step*t)
+			path.LineTo(x, step*float32(i))
+			path.Close()
+		} else {
+			path.MoveTo(step*float32(i), 0)
+			path.LineTo(step*float32(i)+step*t, 0)
+			path.LineTo(step*float32(i)+step*t, y)
+			path.LineTo(step*float32(i), y)
+			path.Close()
+		}
 	}
 	drawer.DrawFill(screen, path, c)
 }

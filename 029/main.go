@@ -52,12 +52,13 @@ type TileDrawer interface {
 
 func (g *Game) makeTiles(canvas *ebiten.Image) Tiles {
 	const step = 96
-	const bigStep = step * 2
+	const middleStep = step * 2
+	const bigStep = step * 4
 	tiles := make(Tiles, 0)
 
 	for x := 0; x < screenWidth; x += bigStep {
 		for y := 0; y < screenHeight; y += bigStep {
-			if rand.Float32() < 0.7 {
+			if rand.Float32() < 0.9 {
 				continue
 			}
 			tileImage, _ := canvas.SubImage(
@@ -72,9 +73,38 @@ func (g *Game) makeTiles(canvas *ebiten.Image) Tiles {
 		}
 	}
 
+	for x := 0; x < screenWidth; x += middleStep {
+		for y := 0; y < screenHeight; y += middleStep {
+			if rand.Float32() < 0.6 {
+				continue
+			}
+			tileImage, _ := canvas.SubImage(
+				image.Rect(x, y, x+middleStep, y+middleStep),
+			).(*ebiten.Image)
+
+			overlaps := false
+			for _, t := range tiles {
+				if t.image.Bounds().Overlaps(tileImage.Bounds()) {
+					overlaps = true
+					continue
+				}
+			}
+			if overlaps {
+				continue
+			}
+
+			tile := &Tile{
+				image:  tileImage,
+				drawer: MiddleTileDrawerFactory(),
+				color:  g.colorpallet.Random(),
+			}
+			tiles = append(tiles, tile)
+		}
+	}
+
 	for x := 0; x < screenWidth; x += step {
 		for y := 0; y < screenHeight; y += step {
-			if rand.Float32() < 0.4 {
+			if rand.Float32() < 0.2 {
 				continue
 			}
 			tileImage, _ := canvas.SubImage(image.Rectangle{
@@ -95,7 +125,7 @@ func (g *Game) makeTiles(canvas *ebiten.Image) Tiles {
 
 			tile := &Tile{
 				image:  tileImage,
-				drawer: TileDrawerFactory(x/step, y/step),
+				drawer: SmallTileDrawerFactory(x/step, y/step),
 				color:  g.colorpallet.Random(),
 			}
 			tiles = append(tiles, tile)

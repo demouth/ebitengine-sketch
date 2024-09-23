@@ -34,9 +34,7 @@ func DrawLine(screen *ebiten.Image, x1, y1, x2, y2, width float32, c color.RGBA)
 		vs[i].ColorB = float32(c.B) / float32(0xff)
 		vs[i].ColorA = float32(c.A) / float32(0xff)
 	}
-	op := &ebiten.DrawTrianglesOptions{}
-	op.FillRule = ebiten.FillRuleFillAll
-	screen.DrawTriangles(vs, is, whiteSubImage, op)
+	DrawTriangles(screen, vs, is)
 }
 func DrawFill(screen *ebiten.Image, path vector.Path, c color.RGBA) {
 	vs, is := path.AppendVerticesAndIndicesForFilling(nil, nil)
@@ -48,12 +46,14 @@ func DrawFill(screen *ebiten.Image, path vector.Path, c color.RGBA) {
 		vs[i].ColorB = float32(c.B) / float32(0xff)
 		vs[i].ColorA = float32(c.A) / float32(0xff)
 	}
+	DrawTriangles(screen, vs, is)
+}
+func DrawTriangles(screen *ebiten.Image, vertices []ebiten.Vertex, indices []uint16) {
 	op := &ebiten.DrawTrianglesOptions{}
 	op.FillRule = ebiten.FillRuleFillAll
 	op.AntiAlias = false
-	screen.DrawTriangles(vs, is, whiteSubImage, op)
+	screen.DrawTriangles(vertices, indices, whiteSubImage, op)
 }
-
 func DrawCircle(screen *ebiten.Image, x, y, radius float32, c color.RGBA) {
 	path := vector.Path{}
 	path.Arc(x, y, radius, 0, 2*math.Pi, vector.Clockwise)
