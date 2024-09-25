@@ -28,3 +28,4 @@
 - [027](https://demouth.github.io/ebitengine-sketch/027/) font Rigid Body 2 (segments)
 - [028](https://demouth.github.io/ebitengine-sketch/028/) metaball
 - [029](https://demouth.github.io/ebitengine-sketch/029/) easing
+- [030](https://demouth.github.io/ebitengine-sketch/030/) arc to
