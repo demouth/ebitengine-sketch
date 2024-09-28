@@ -3,7 +3,7 @@ module github.com/demouth/ebitengine-sketch/031
 go 1.23.1
 
 require (
-	github.com/demouth/ebitencp v1.4.0
+	github.com/demouth/ebitencp v1.5.0
 	github.com/hajimehoshi/ebiten/v2 v2.8.0
 	github.com/jakecoffman/cp/v2 v2.0.2
 )

@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"image/color"
 	_ "image/png"
 
 	"github.com/demouth/ebitencp"
@@ -28,7 +29,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-
+	screen.Fill(color.RGBA{R: 0xfd, G: 0xfc, B: 0xdc, A: 0xff})
 	cp.DrawSpace(g.space, g.ecp.WithScreen(screen))
 
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
@@ -89,6 +90,9 @@ func main() {
 	g.ecp = ebitencp.NewDrawer(0, 0)
 	g.ecp.FlipYAxis = true
 	g.ecp.OptStroke.AntiAlias = true
+	g.ecp.Theme.Shape = color.RGBA{R: 0x00, G: 0x81, B: 0xa7, A: 0xff}
+	g.ecp.Theme.Outline = color.RGBA{R: 0x00, G: 0xaf, B: 0xb9, A: 0xff}
+	g.ecp.Theme.Constraint = color.RGBA{R: 0x00, G: 0xaf, B: 0xb9, A: 0xff}
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("tofu")
