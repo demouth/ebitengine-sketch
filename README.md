@@ -29,3 +29,4 @@
 - [028](https://demouth.github.io/ebitengine-sketch/028/) metaball
 - [029](https://demouth.github.io/ebitengine-sketch/029/) easing
 - [030](https://demouth.github.io/ebitengine-sketch/030/) arc to
+- [031](https://demouth.github.io/ebitengine-sketch/031/) tofu
