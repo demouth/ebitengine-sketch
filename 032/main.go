@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	screenWidth  = 1200
-	screenHeight = 1200
+	screenWidth  = 1000
+	screenHeight = 1000
 )
 
 var (
@@ -61,7 +61,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.White)
 
 	kingyoImage := ebiten.NewImage(screenWidth, screenHeight)
-	bluredImage := ebiten.NewImage(screenWidth*0.5, screenHeight*0.5)
+	// bluredImage := ebiten.NewImage(screenWidth*0.5, screenHeight*0.5)
 
 	for _, tofu := range g.tofus {
 		tofu.Draw(kingyoImage)
@@ -69,21 +69,21 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	// make shadow
 	{
-		imageop := &ebiten.DrawImageOptions{}
-		imageop.GeoM.Scale(0.5, 0.5)
-		shadowImage := ebiten.NewImage(bluredImage.Bounds().Dx(), bluredImage.Bounds().Dy())
-		shadowImage.DrawImage(kingyoImage, imageop)
-		shaderop := &ebiten.DrawRectShaderOptions{}
-		shaderop.Images[0] = shadowImage
-		bluredImage.DrawRectShader(bluredImage.Bounds().Dx(), bluredImage.Bounds().Dy(), g.shader, shaderop)
+		// imageop := &ebiten.DrawImageOptions{}
+		// imageop.GeoM.Scale(0.5, 0.5)
+		// shadowImage := ebiten.NewImage(bluredImage.Bounds().Dx(), bluredImage.Bounds().Dy())
+		// shadowImage.DrawImage(kingyoImage, imageop)
+		// shaderop := &ebiten.DrawRectShaderOptions{}
+		// shaderop.Images[0] = shadowImage
+		// bluredImage.DrawRectShader(bluredImage.Bounds().Dx(), bluredImage.Bounds().Dy(), g.shader, shaderop)
 	}
 
 	// draw kingyo and shadow
 	{
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Scale(2, 2)
-		op.GeoM.Translate(5, 5)
-		screen.DrawImage(bluredImage, op)
+		// op := &ebiten.DrawImageOptions{}
+		// op.GeoM.Scale(2, 2)
+		// op.GeoM.Translate(5, 5)
+		// screen.DrawImage(bluredImage, op)
 		screen.DrawImage(kingyoImage, nil)
 	}
 
@@ -109,7 +109,7 @@ func main() {
 	space.SetGravity(cp.Vector{X: 0, Y: 0})
 
 	tofus := Tofus{}
-	for i := 0; i < 300; i++ {
+	for i := 0; i < 250; i++ {
 		tofu := NewTofu(space, screenWidth*rand.Float64(), screenHeight*rand.Float64(), 8)
 		tofus = append(tofus, tofu)
 	}
