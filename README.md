@@ -30,3 +30,4 @@
 - [029](https://demouth.github.io/ebitengine-sketch/029/) easing
 - [030](https://demouth.github.io/ebitengine-sketch/030/) arc to
 - [031](https://demouth.github.io/ebitengine-sketch/031/) tofu
+- [032](https://demouth.github.io/ebitengine-sketch/032/) goldfish
