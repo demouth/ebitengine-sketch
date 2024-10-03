@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	screenWidth  = 1000
-	screenHeight = 1000
+	screenWidth  = 1200
+	screenHeight = 1200
 )
 
 var (
@@ -109,7 +109,7 @@ func main() {
 	space.SetGravity(cp.Vector{X: 0, Y: 0})
 
 	tofus := Tofus{}
-	for i := 0; i < 250; i++ {
+	for i := 0; i < 220; i++ {
 		tofu := NewTofu(space, screenWidth*rand.Float64(), screenHeight*rand.Float64(), 8)
 		tofus = append(tofus, tofu)
 	}
@@ -180,15 +180,17 @@ func (t Tofus) Update() {
 				sepPosSum = sepPosSum.Add(t1.head.Position().Sub(t2.head.Position()).Mult(1.0 / dist))
 				sepCount++
 			}
-			// alignment
-			if dist < AlignNeighborhoodRadius {
-				aliVelSum = aliVelSum.Add(t2.head.Velocity())
-				aliCount++
-			}
-			// cohesion
-			if dist < CohesionNeighborhoodRadius {
-				cohPosSum = cohPosSum.Add(t2.head.Position())
-				cohCount++
+			if t1.color == t2.color {
+				// alignment
+				if dist < AlignNeighborhoodRadius {
+					aliVelSum = aliVelSum.Add(t2.head.Velocity())
+					aliCount++
+				}
+				// cohesion
+				if dist < CohesionNeighborhoodRadius {
+					cohPosSum = cohPosSum.Add(t2.head.Position())
+					cohCount++
+				}
 			}
 		}
 		// separation
@@ -226,17 +228,28 @@ func (t Tofus) Update() {
 		vec = vec.Normalize()
 		vec = vec.Mult(3)
 		t[i].Add(vec.X, vec.Y)
+		// When it stops, move it in a random direction
+		if t[i].vec.Length() < 1 {
+			vec := cp.Vector{X: (rand.Float64() - 0.5) * 100, Y: (rand.Float64() - 0.5) * 100}
+			t[i].Add(vec.X, vec.Y)
+		}
 	}
 	for i := 0; i < len(t); i++ {
 		t[i].Move()
 	}
 }
 
+const (
+	TofuColorRed uint8 = iota
+	TofuColorBlack
+)
+
 type Tofu struct {
 	circles [][]*cp.Body
 	vx, vy  float64
 	vec     cp.Vector
 	head    *cp.Body
+	color   uint8
 }
 
 func (t *Tofu) Move() {
@@ -253,16 +266,23 @@ func (t *Tofu) Draw(screen *ebiten.Image) {
 	for y := 0; y < len(t.circles); y++ {
 		startIndex := uint16(len(vertices) - len(t.circles[y]))
 		for x := 0; x < len(t.circles[y]); x++ {
-			vertices = append(vertices, ebiten.Vertex{
+			vertex := ebiten.Vertex{
 				DstX:   float32(t.circles[y][x].Position().X),
 				DstY:   float32(t.circles[y][x].Position().Y),
 				SrcX:   float32(200) * float32(x) / float32(len(t.circles[y])-1),
 				SrcY:   float32(800) * float32(y) / float32(len(t.circles)-1),
-				ColorR: 1,
-				ColorG: 1,
-				ColorB: 1,
 				ColorA: 1,
-			})
+			}
+			if t.color != TofuColorRed {
+				vertex.ColorR = 1
+				vertex.ColorG = 1
+				vertex.ColorB = 1
+			} else {
+				vertex.ColorR = 0
+				vertex.ColorG = 0
+				vertex.ColorB = 0
+			}
+			vertices = append(vertices, vertex)
 		}
 		if y == 0 {
 			continue
@@ -333,9 +353,14 @@ func NewTofu(space *cp.Space, startX, startY, step float64) *Tofu {
 			}
 		}
 	}
+	color := TofuColorRed
+	if rand.Float64() < 0.5 {
+		color = TofuColorBlack
+	}
 	t := &Tofu{
 		circles: circles,
 		head:    circles[0][1],
+		color:   color,
 	}
 	return t
 }
